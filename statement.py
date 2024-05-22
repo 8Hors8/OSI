@@ -95,8 +95,9 @@ class Assistant:
                     kv_payment = self.ved_sheet_payment.cell(row=coord_row + i, column=coord_colu + 1).value
 
                     if kv == str(kv_payment):
-                        date_payment = str(self.ved_sheet_payment.cell(row=coord_row + i, column=coord_colu).value)
+                        date_payment = self.ved_sheet_payment.cell(row=coord_row + i, column=coord_colu).value
                         date_payment = date_payment if date_payment is not None else str(0)
+                        date_payment = str(date_payment)
                         # print('kv_payment',date_payment)
 
                         if date_payment == "0":
