@@ -17,7 +17,7 @@ def interfes():
     ]
 
     # Create the Window
-    window = sg.Window('Помощник ОСИ v-1.1.02', layout)
+    window = sg.Window('Помощник ОСИ v-1.1.2', layout)
 
     # Event Loop to process "events" and get the "values" of the inputs
 
