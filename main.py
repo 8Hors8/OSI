@@ -4,7 +4,22 @@ import statement
 from time import time
 version = '1, 2, 0, 0'
 class OSIAssistantApp(tk.Tk):
+    """
+       Графический интерфейс помощника ОСИ, разработанный на Tkinter.
+
+       Приложение позволяет пользователю выбрать файлы ведомости и оплаты,
+       указать количество квартир, запустить обработку данных и просмотреть результат в текстовом поле.
+
+       Атрибуты:
+           kv_entry (tk.Entry): Поле ввода количества квартир.
+           bank_path (tk.Entry): Поле ввода пути к файлу оплаты.
+           ved_path (tk.Entry): Поле ввода пути к файлу ведомости.
+           output (tk.scrolledtext.ScrolledText): Поле вывода сообщений.
+       """
     def __init__(self):
+        """
+        Инициализирует главное окно приложения, размещает все элементы интерфейса.
+        """
         super().__init__()
         self.title(f"Помощник ОСИ v{version}")
 
@@ -36,18 +51,30 @@ class OSIAssistantApp(tk.Tk):
         self.output.grid(row=4, column=0, columnspan=3, padx=5, pady=5)
 
     def select_bank_file(self):
+        """
+         Открывает диалог выбора файла и устанавливает путь к файлу оплаты.
+        """
         path = filedialog.askopenfilename()
         if path:
             self.bank_path.delete(0, tk.END)
             self.bank_path.insert(0, path)
 
     def select_ved_file(self):
+        """
+        Открывает диалог выбора файла и устанавливает путь к файлу ведомости.
+        """
         path = filedialog.askopenfilename()
         if path:
             self.ved_path.delete(0, tk.END)
             self.ved_path.insert(0, path)
 
     def run_assistant(self):
+        """
+        Запускает обработку данных с помощью класса Assistant.
+
+        Отображает сообщения о ходе работы и времени выполнения.
+        В случае ошибки выводит сообщение об ошибке.
+        """
         try:
             path_bank = self.bank_path.get()
             path_ved = self.ved_path.get()
@@ -65,6 +92,9 @@ class OSIAssistantApp(tk.Tk):
             messagebox.showerror("Ошибка", str(e))
 
     def clear_output(self):
+        """
+        Очищает текстовое поле вывода от всех сообщений.
+        """
         self.output.delete(1.0, tk.END)
 
 
