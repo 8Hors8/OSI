@@ -1,4 +1,5 @@
 import subprocess
+import main
 
 # 1. Сначала генерируем version.txt
 subprocess.run(["python", "creating_fail_version.py"], check=True)
@@ -10,6 +11,6 @@ subprocess.run([
     "--noconsole",
     "--version-file=version.txt",  # Убедись, что путь правильный!
     "--icon=лого.ico",                    # ОБЯЗАТЕЛЬНАЯ запятая здесь
-    "--name=ОСИ",                         # Исправлено с --n NAME=ОСИ
+    f"--name=Помощник ОСИ v{main.version}",                         # Исправлено с --n NAME=ОСИ
     "main.py"
 ], check=True)
