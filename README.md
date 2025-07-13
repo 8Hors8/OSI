@@ -29,15 +29,18 @@ python main.py
 ## Структура проекта
 
 ```
-OSI_Assistant/
-├── main.py
-├── assistant.py
+OSI/
+├── gitignore
 ├── bank_xlsx.py
+├── build.py
 ├── creating_fail_version.py
-├── requirements.txt
-├── README.md
 ├── LICENSE
-└── output/
+├── main.py
+├── README.md
+├── requirements.txt
+├── statement.py
+├── test.py
+└── version.txt
 ```
 
 ## Автор
