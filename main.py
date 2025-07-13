@@ -2,11 +2,11 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
 import statement
 from time import time
-
+version = '1, 2, 0, 0'
 class OSIAssistantApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Помощник ОСИ v1.2.0")
+        self.title(f"Помощник ОСИ v{version}")
 
         # Ввод количества квартир
         tk.Label(self, text="Укажите кол-во квартир").grid(row=0, column=0, sticky="w")
