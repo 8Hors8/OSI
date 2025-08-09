@@ -9,8 +9,8 @@ subprocess.run([
     "pyinstaller",
     "--onefile",
     "--noconsole",
-    "--version-file=version.txt",  # Убедись, что путь правильный!
-    "--icon=лого.ico",                    # ОБЯЗАТЕЛЬНАЯ запятая здесь
-    f"--name=Помощник ОСИ v{main.version}",                         # Исправлено с --n NAME=ОСИ
+    "--version-file=version.txt",                                   # указать путь к фалу
+    "--icon=лого.ico",                                              # указать иконку
+    f"--name=Помощник ОСИ v{main.version}",
     "main.py"
 ], check=True)

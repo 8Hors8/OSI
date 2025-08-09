@@ -31,7 +31,7 @@ def payments(bank_sheet, name_bank='None'):
             print('Файл от банка выбран не верно')
             break
 
-        kv_chek = ''.join(re.findall('\d', st_col2[5]))
+        kv_chek = ''.join(re.findall(r'\d', st_col2[5]))
 
         if len(kv_chek) <= 3:
             if kv_chek[0] == '0':
