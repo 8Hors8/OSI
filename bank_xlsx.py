@@ -1,11 +1,9 @@
 import openpyxl as op
 import re
-import pprint as pp
 
 
 def payments(bank_sheet, name_bank='None'):
     """
-
     :param bank_sheet:
     :param name_bank:
     :return:
@@ -103,13 +101,13 @@ def payments(bank_sheet, name_bank='None'):
 
 
 if __name__ == '__main__':
-    b = 'fail/Платежи (46).xlsx'
+    bb = 'D:/для теста оси/25 Платежи -июль 25 пол.xlsx'
     y = 'fail/4Платежи апрель банк версия test.xlsx'
     a = 'D:/PyCharm/Project/OSI/fail/Платежи сентябрь бак версия.xlsx'
     c = 'D:/PyCharm/Project/OSI/fail/4Платежи апрель банк версия.xlsx'
     b = 'D:/PyCharm/Project/osi_doc/2/Платежи (80).xlsx'
     p = 'C:/Users/бук/Desktop/fail1/4Платежи апрель банк версия.xlsx.xlsx'
-    wb = op.load_workbook(b, data_only=True)
+    wb = op.load_workbook(bb, data_only=True)
     bank_sheet = wb.active
     t = payments(bank_sheet)
     print(t, 'len-', len(t))

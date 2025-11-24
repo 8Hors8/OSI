@@ -282,9 +282,7 @@ class Assistant:
 
 
 if __name__ == '__main__':
-    a = 'D:/PyCharm/Project/OSI/fail/вед  Кокжал Барака.xlsx'
-    a1 = 'D:/PyCharm/Project/osi_doc/2/вед  Кокжал Барака 2024г — копия.xlsx'
-    b = 'D:/PyCharm/Project/osi_doc/2/Платежи (80).xlsx'
-    r = 'D:/PyCharm/Project/OSI/fail/Платежи август банк версия.xlsx'
+    a1 = 'D:/для теста оси/Ведомости  2025г пробная — копия.xlsx'
+    b = 'D:/для теста оси/25 Платежи -июль 25 пол.xlsx'
     # ved('fail/вед  Кокжал Барака.xlsx', 'fail/Платежи (46).xlsx')
     Assistant(a1, b, 60).launch()
