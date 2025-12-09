@@ -9,9 +9,11 @@ def bank_parser(path_bank_form: str):
     :param path_bank_form: путь к файлу банка
     :return: активный лист или None
     """
+    result = {}
     workbook = open_excel_file.open_file(path_bank_form)
     if workbook:
-        return workbook.active
+
+        return result
     else:
         logger.error(f'Не удалось открыть файл {path_bank_form}')
         pass
