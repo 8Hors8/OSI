@@ -1,6 +1,6 @@
 
 import logging
-from parser import bank_parser
+from parser import load_bank_file
 
 log = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ class ManagerBank:
     """
     def __init__(self, path:str):
         self.path = path
-        self.bank = bank_parser(path)
+        self.bank = load_bank_file(path)
 
 
 
