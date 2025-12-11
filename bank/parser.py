@@ -10,10 +10,10 @@ from openpyxl.workbook import Workbook
 from typing import Optional
 from openpyxl.utils.exceptions import InvalidFileException
 
-
 logger = logging.getLogger(__name__)
 
-def load_bank_file(file_path: str)-> Optional[Workbook]:
+
+def load_bank_file(file_path: str) -> Optional[Workbook]:
     """
     Парсит Excel-файл с банковской ведомостью.
     :param file_path: путь к файлу банка
@@ -39,7 +39,7 @@ def load_bank_file(file_path: str)-> Optional[Workbook]:
         return None
 
 
-def extract_apartment_number (apartment_data:str) -> Optional[str]:
+def extract_apartment_number(apartment_data: str) -> Optional[str]:
     """
     Извлекаем номер квартиры
     """
@@ -48,8 +48,19 @@ def extract_apartment_number (apartment_data:str) -> Optional[str]:
     return apartment_number
 
 
+def group_daily_payments():
+    """
+    Группирует платежи по Квартире и Дате, суммируя транзакции за один день.
+    """
+    pass
 
-def acquisition_data(sheet) -> Optional[dict[str, list[str]]]:
+def normalize_date ():
+    """
+    Приводит входящую дату (строка, datetime, timestamp) к единому, стандартному формату (например, 'ГГГГ.ММ.ДД')
+    """
+
+
+def acquisition_data(sheet) -> Optional[dict[str, list[dict[str, str]]]]:
     """
     Получаем данные с листа эксель вид счета на который зачисляются средства, номера квартир дату платежа
      и сумму платежа
@@ -60,17 +71,18 @@ def acquisition_data(sheet) -> Optional[dict[str, list[str]]]:
     max_row = sheet.max_row
     for row in range(2, max_row + 1):
         if sheet.cell(row=row, column=2).value is not None:
+
             payment_type = sheet.cell(row=row, column=1).value
             apartment_number = extract_apartment_number(sheet.cell(row=row, column=2).value)
             sum_amount = sheet.cell(row=row, column=4).value
-            data_amount = sheet.cell(row=row, column=5).value
+            date_amount = sheet.cell(row=row, column=5).value
+
             if apartment_number in result:
-                result[apartment_number].append({'type': payment_type, 'sum': sum_amount, 'data': data_amount})
+                result[apartment_number].append({'type': payment_type, 'sum': sum_amount, 'date': date_amount})
             else:
-                result[f'{apartment_number}']=[{'type': payment_type, 'sum': sum_amount, 'data': data_amount}]
+                result[f'{apartment_number}'] = [{'type': payment_type, 'sum': sum_amount, 'date': date_amount}]
 
     return result
-
 
 
 if __name__ == '__main__':
@@ -79,5 +91,3 @@ if __name__ == '__main__':
             level=logging.DEBUG,
             format="[%(asctime)s.%(msecs)03d] %(module)s:%(lineno)d %(levelname)7s - %(message)s"
         )
-
-
