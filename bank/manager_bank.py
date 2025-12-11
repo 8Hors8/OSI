@@ -43,5 +43,5 @@ if __name__ == '__main__':
         )
     form = ManagerBank(r'D:\googleDriver\ОСИ исходники\пробный вариант.xlsx')
     print(form.sheet.cell(row=3, column=2).value)
-    form.test_data()
+    form.acquire_payments()
     print(form.data)
