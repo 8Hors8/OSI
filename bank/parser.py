@@ -1,3 +1,7 @@
+"""
+parser.py
+"""
+
 import logging
 
 import openpyxl as op
@@ -35,8 +39,14 @@ def load_bank_file(file_path: str)-> Optional[Workbook]:
         return None
 
 
-def extract_apartment_number (apartment_data:str) -> Optional[int]:
-    pass
+def extract_apartment_number (apartment_data:str) -> Optional[str]:
+    """
+    Извлекаем номер квартиры
+    """
+    apartment_number = apartment_data.split(';')[5]
+
+    return apartment_number
+
 
 
 def acquisition_data(sheet) -> Optional[dict[str, list[str]]]:
@@ -48,15 +58,17 @@ def acquisition_data(sheet) -> Optional[dict[str, list[str]]]:
     """
     result = {}
     max_row = sheet.max_row
-    print(f'max_row: {max_row}')
     for row in range(2, max_row + 1):
-        print(f'row: {row}, значение;{sheet.cell(row=row, column=2).value}')
         if sheet.cell(row=row, column=2).value is not None:
             payment_type = sheet.cell(row=row, column=1).value
-            apartment_number = sheet.cell(row=row, column=2).value
+            apartment_number = extract_apartment_number(sheet.cell(row=row, column=2).value)
             sum_amount = sheet.cell(row=row, column=4).value
             data_amount = sheet.cell(row=row, column=5).value
-            result[f'{apartment_number}']=[{'type': payment_type, 'sum': sum_amount, 'data': data_amount}]
+            if apartment_number in result:
+                result[apartment_number].append({'type': payment_type, 'sum': sum_amount, 'data': data_amount})
+            else:
+                result[f'{apartment_number}']=[{'type': payment_type, 'sum': sum_amount, 'data': data_amount}]
+
     return result
 
 
