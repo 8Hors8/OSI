@@ -9,6 +9,7 @@ import re
 from openpyxl.workbook import Workbook
 from typing import Optional
 from openpyxl.utils.exceptions import InvalidFileException
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -54,10 +55,25 @@ def group_daily_payments():
     """
     pass
 
-def normalize_date ():
+
+def normalize_date(date_obj, ) -> Optional[str]:
     """
-    Приводит входящую дату (строка, datetime, timestamp) к единому, стандартному формату (например, 'ГГГГ.ММ.ДД')
+    Приводит дату (строка или datetime) к формату 'ДД.ММ.ГГГГ'.
+
+    :param date_obj: Строка (например, '2025-12-01', '01.12.2025') или datetime
+    :return: строка формата 'ДД.ММ.ГГГГ'
     """
+
+    if isinstance(date_obj, datetime):
+        return str(date_obj.strftime('%d.%m.%Y'))
+
+    if isinstance(date_obj, str):
+        date_obj = date_obj.strip().split(' ')[0].replace('-', '.')
+        return str(date_obj)
+
+    return None
+
+
 
 
 def acquisition_data(sheet) -> Optional[dict[str, list[dict[str, str]]]]:
@@ -75,7 +91,7 @@ def acquisition_data(sheet) -> Optional[dict[str, list[dict[str, str]]]]:
             payment_type = sheet.cell(row=row, column=1).value
             apartment_number = extract_apartment_number(sheet.cell(row=row, column=2).value)
             sum_amount = sheet.cell(row=row, column=4).value
-            date_amount = sheet.cell(row=row, column=5).value
+            date_amount = normalize_date(sheet.cell(row=row, column=5).value)
 
             if apartment_number in result:
                 result[apartment_number].append({'type': payment_type, 'sum': sum_amount, 'date': date_amount})
