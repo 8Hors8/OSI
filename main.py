@@ -21,7 +21,7 @@ from time import time
 from config_logging import settings_logging
 import statement  # твой модуль с Assistant
 
-VERSION = "1.2.0.1"
+VERSION = "2.0.0.1"
 
 
 class OSIAssistantApp(tk.Tk):

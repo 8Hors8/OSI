@@ -74,6 +74,7 @@ def normalize_date(date_obj, ) -> Optional[str]:
     return None
 
 
+def valid ():
 
 
 def acquisition_data(sheet) -> Optional[dict[str, list[dict[str, str]]]]:

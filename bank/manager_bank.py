@@ -42,6 +42,6 @@ if __name__ == '__main__':
             format="[%(asctime)s.%(msecs)03d] %(module)s:%(lineno)d %(levelname)7s - %(message)s"
         )
     form = ManagerBank(r'D:\googleDriver\ОСИ исходники\пробный вариант.xlsx')
-    print(form.sheet.cell(row=3, column=2).value)
+    # print(form.sheet.cell(row=3, column=2).value)
     form.acquire_payments()
     print(form.data)
