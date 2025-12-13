@@ -74,7 +74,32 @@ def normalize_date(date_obj, ) -> Optional[str]:
     return None
 
 
-def valid ():
+def has_payment_errors(apartment_number, sum_amount, date_amount) -> bool:
+    """
+    Проверяет наличие ошибок (значений None) в данных платежа.
+
+    Функция итерируется по заданным параметрам и проверяет, равно ли какое-либо
+    из них значению None. В случае обнаружения None, ошибка логируется через
+    предопределенный объект logger.
+
+    :param apartment_number: Номер квартиры (ожидается str или int, проверяется на None).
+    :param sum_amount: Сумма платежа (ожидается число, проверяется на None).
+    :param date_amount: Дата платежа (ожидается объект даты/времени, проверяется на None).
+    :return: bool. True, если хотя бы один из параметров равен None, False в противном случае.
+    """
+    errors = {
+        'Квартира': apartment_number,
+        'Сумма': sum_amount,
+        'Дата': date_amount,
+    }
+
+    has_error = False
+    for field, value in errors.items():
+        if value is None:
+            logger.error(f'{field} задан(а) некорректно')
+            has_error = True
+
+    return has_error
 
 
 def acquisition_data(sheet) -> Optional[dict[str, list[dict[str, str]]]]:
@@ -93,6 +118,11 @@ def acquisition_data(sheet) -> Optional[dict[str, list[dict[str, str]]]]:
             apartment_number = extract_apartment_number(sheet.cell(row=row, column=2).value)
             sum_amount = sheet.cell(row=row, column=4).value
             date_amount = normalize_date(sheet.cell(row=row, column=5).value)
+
+            validator_value = has_payment_errors(apartment_number,sum_amount,date_amount)
+            if validator_value:
+                logger.error(f'Ошибка в строке {row}')
+                continue
 
             if apartment_number in result:
                 result[apartment_number].append({'type': payment_type, 'sum': sum_amount, 'date': date_amount})
