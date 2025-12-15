@@ -4,7 +4,7 @@ manager_bank.py
 import logging
 from parser import load_bank_file, acquisition_data
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 class ManagerBank:
     """
@@ -12,8 +12,29 @@ class ManagerBank:
     """
     def __init__(self, path:str):
         self.path = path
-        self.sheet = load_bank_file(path)
+        self.sheet = None
         self.data = None
+
+    def load_sheet(self) -> bool:
+        """
+        Загружает Excel-файл банка.
+
+        Пытается загрузить файл по пути self.path.
+        В случае ошибки логирует причину и сообщает вызывающему коду
+        о неудаче загрузки.
+
+        :return: True — если файл успешно загружен, False — если произошла ошибка.
+        """
+        self.sheet = load_bank_file(self.path)
+
+        if self.sheet is None:
+            logger.error(
+                "Не удалось загрузить файл банка. "
+                "Проверьте путь к файлу и повторите попытку."
+            )
+            return False
+
+        return True
 
     def acquire_payments(self):
         """
@@ -36,7 +57,7 @@ class ManagerBank:
 
 
 if __name__ == '__main__':
-    if not log.hasHandlers():
+    if not logger.hasHandlers():
         logging.basicConfig(
             level=logging.DEBUG,
             format="[%(asctime)s.%(msecs)03d] %(module)s:%(lineno)d %(levelname)7s - %(message)s"
