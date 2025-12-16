@@ -60,15 +60,25 @@ def extract_apartment_number(apartment_data: str) -> Optional[str]:
     """
     Извлекает номер квартиры из строки назначения платежа.
 
-    Ожидается, что строка имеет формат, содержащий номер квартиры
-    в шестом элементе, разделённом символом ';'.
+    Из шестого элемента строки, разделённой ';',
+    удаляет все символы, кроме цифр.
 
     :param apartment_data: Строка с описанием назначения платежа.
-    :return: Номер квартиры в виде строки или None при ошибке извлечения.
+    :return: Номер квартиры (только цифры) или None, если извлечь невозможно.
     """
-    apartment_number = apartment_data.split(';')[5]
+    if not apartment_data:
+        return None
 
-    return apartment_number
+    parts = apartment_data.split(';')
+    if len(parts) < 6:
+        return None
+
+    raw_value = parts[5]
+
+    # Оставляем ТОЛЬКО цифры
+    digits = re.sub(r"\D", "", raw_value)
+
+    return digits if digits else None
 
 
 def group_daily_payments(result_payment: list, add_dict: dict) -> Optional[list[dict[str, str | int]]]:
@@ -116,7 +126,7 @@ def normalize_date(date_obj, ) -> Optional[str]:
     return None
 
 
-def has_payment_errors(apartment_number: str, sum_amount: int, date_amount: str) -> bool:
+def has_payment_errors(apartment_number: str, sum_payment: int, date_payment: str) -> bool:
     """
     Проверяет корректность данных платежа.
 
@@ -124,14 +134,14 @@ def has_payment_errors(apartment_number: str, sum_amount: int, date_amount: str)
     При обнаружении ошибки логирует соответствующее сообщение.
 
     :param apartment_number: Номер квартиры.
-    :param sum_amount: Сумма платежа.
-    :param date_amount: Дата платежа.
+    :param sum_payment: Сумма платежа.
+    :param date_payment: Дата платежа.
     :return: True, если обнаружена хотя бы одна ошибка, иначе False.
     """
     errors = {
         'Квартира': apartment_number,
-        'Сумма': sum_amount,
-        'Дата': date_amount,
+        'Сумма': sum_payment,
+        'Дата': date_payment,
     }
 
     has_error = False
@@ -172,15 +182,15 @@ def acquisition_data(sheet) -> Optional[dict[str, list[dict[str, str]]]]:
 
             payment_type = sheet.cell(row=row, column=1).value
             apartment_number = extract_apartment_number(sheet.cell(row=row, column=2).value)
-            sum_amount = int(sheet.cell(row=row, column=4).value)
-            date_amount = normalize_date(sheet.cell(row=row, column=5).value)
+            sum_payment = int(sheet.cell(row=row, column=4).value)
+            date_payment = normalize_date(sheet.cell(row=row, column=5).value)
 
-            validator_value = has_payment_errors(apartment_number, sum_amount, date_amount)
+            validator_value = has_payment_errors(apartment_number, sum_payment, date_payment)
             if validator_value:
                 logger.error(f'Ошибка в строке {row}')
                 continue
 
-            add_dict = {'type': payment_type, 'sum': sum_amount, 'date': date_amount}
+            add_dict = {'type': payment_type, 'sum': sum_payment, 'date': date_payment}
 
             if apartment_number in result:
                 result[apartment_number] = group_daily_payments(result[apartment_number], add_dict)
