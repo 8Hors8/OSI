@@ -1,5 +1,5 @@
 """
-parser.py
+bank_parser.py
 
 Модуль отвечает за загрузку и первичную обработку банковских Excel-файлов.
 
@@ -24,36 +24,6 @@ from openpyxl.utils.exceptions import InvalidFileException
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
-
-
-def load_bank_file(file_path: str) -> Optional[Workbook]:
-    """
-    Загружает Excel-файл банковской ведомости.
-
-    Открывает файл Excel по указанному пути и возвращает активный лист.
-    В случае ошибки чтения логирует причину и возвращает None.
-
-    :param file_path: Полный путь к файлу банковской ведомости.
-    :return: Активный лист Excel (Worksheet) или None при ошибке загрузки.
-    """
-    try:
-        # data_only=True — если нужен результат формул
-        book = op.load_workbook(file_path, data_only=True)
-        sheet = book.active
-        logger.info(f'Фйл с банка успешно загружен!')
-        return sheet
-    except FileNotFoundError:
-        logger.error(f'Ошибка: Файл не найден по пути: "{file_path}"')
-        return None
-    except PermissionError:
-        logger.error(f'Ошибка: Нет доступа. Закройте файл "{file_path}"')
-        return None
-    except InvalidFileException:
-        logger.error(f'Ошибка: Файл "{file_path}" не является корректным Excel-файлом.')
-        return None
-    except Exception as e:
-        logger.error(f'Непредвиденная ошибка при загрузке файла: {e}')
-        return None
 
 
 def extract_apartment_number(apartment_data: str) -> Optional[str]:
