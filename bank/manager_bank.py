@@ -1,8 +1,23 @@
 """
 manager_bank.py
+
+Менеджер банковского модуля ОСИ.
+
+Модуль содержит класс ManagerBank, который отвечает за:
+- загрузку банковского Excel-файла;
+- инициализацию и хранение активного листа Excel;
+- запуск парсинга банковских данных;
+- формирование структурированных данных платежей.
+
+ManagerBank не выполняет бизнес-логику разноски платежей
+и не взаимодействует с ведомостью напрямую.
+Он подготавливает данные для дальнейшей обработки
+на уровне приложения (OSIApplication).
 """
 import logging
-from parser import load_bank_file, acquisition_data
+
+from core.excel_loader import load_excel_file
+from .bank_parser import  acquisition_data
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +40,7 @@ class ManagerBank:
 
         :return: True — если файл успешно загружен, False — если произошла ошибка.
         """
-        self.sheet = load_bank_file(self.path)
+        self.sheet = load_excel_file(self.path).active
 
         if self.sheet is None:
             logger.error(
