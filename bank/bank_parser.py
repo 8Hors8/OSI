@@ -160,7 +160,7 @@ def acquisition_data(sheet) -> Optional[dict[str, list[dict[str, str]]]]:
                 logger.error(f'Ошибка в строке {row}')
                 continue
 
-            add_dict = {'type': payment_type, 'sum': sum_payment, 'date': date_payment}
+            add_dict = {'type': payment_type.lower(), 'sum': sum_payment, 'date': date_payment}
 
             if apartment_number in result:
                 result[apartment_number] = group_daily_payments(result[apartment_number], add_dict)
