@@ -21,7 +21,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 
-def load_excel_file(file_path: str) -> Optional[Workbook] | None:
+def load_excel_file(file_path: str) -> Optional[Workbook]:
     """
     Загружает Excel-книгу по указанному пути.
 
@@ -35,7 +35,6 @@ def load_excel_file(file_path: str) -> Optional[Workbook] | None:
     try:
         # data_only=True — если нужен результат формул
         book = op.load_workbook(file_path, data_only=True)
-        logger.info(f'Фйл с банка успешно загружен!')
         return book
     except FileNotFoundError:
         logger.error(f'Ошибка: Файл не найден по пути: "{file_path}"')
