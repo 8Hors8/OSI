@@ -13,7 +13,10 @@ statements_manager.py
 import logging
 from typing import Optional
 from openpyxl.workbook import Workbook
+from pathlib import Path
+
 from core.excel_loader import load_excel_file
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +35,9 @@ class ManagerStatements:
         :param path: Полный путь к Excel-файлу ведомости.
         """
         self.path: str = path
+        self.name_file = Path(self.path).name
         self.book: Optional[Workbook] = None
+        self.list_sheets:list|None = None
 
     def load_statements(self) -> bool:
         """
@@ -48,13 +53,27 @@ class ManagerStatements:
 
         if self.book is None:
             logger.warning(
-                f"Загрузка прервана: файл по пути '{self.path}' не может быть открыт. "
-                "Проверьте наличие файла и повторите выбор."
+                f"Загрузка прервана: файл по пути '{self.path}' не может быть открыт."
             )
             return False
 
-        logger.info(f"Ведомость успешно загружена: {self.path}")
+        self.list_sheets = self._get_list_sheets()
+
+        if not self.list_sheets:
+            logger.error(
+                f"Файл '{self.name_file}' загружен, но не содержит листов. "
+                "Ведомость считается некорректной."
+            )
+            self.book = None
+            return False
+
+        logger.info(f"Ведомость успешно загружена: {self.name_file}")
+        logger.debug(f"Список листов: {self.list_sheets}")
         return True
+
+    def _get_list_sheets(self) -> list[str]:
+        list_sheets = self.book.sheetnames if self.book is not None else []
+        return list_sheets
 
     def save_statement(self) -> bool:
         """
@@ -95,8 +114,9 @@ if __name__ == "__main__":
         )
 
     # Тестовый запуск
-    statement_path1 = r'D:\googleDriver\ОСИ исходники\Ведомость на 2026год.xlsx'
-    manager = ManagerStatements(statement_path1)
-
-    if manager.load_statements():
-        print(f"Объект книги инициализирован: {manager.book}")
+    statement_path1 = r'D:\googleDriver\ОСИ исходники\Ведомость на 2026v1год.xlsx'
+    statement_path2 = r'D:\googleDriver\ОСИ исходники\тест ведомости.xlsx'
+    manager = ManagerStatements(statement_path2)
+    manager.load_statements()
+    print(manager.book.active)
+    print(manager.list_sheets)
