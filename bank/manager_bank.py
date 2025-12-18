@@ -15,6 +15,7 @@ ManagerBank не выполняет бизнес-логику разноски �
 на уровне приложения (OSIApplication).
 """
 import logging
+from pathlib import Path
 
 from core.excel_loader import load_excel_file
 from .bank_parser import  acquisition_data
@@ -27,6 +28,7 @@ class ManagerBank:
     """
     def __init__(self, path:str):
         self.path = path
+        self.name_file = Path(self.path).name
         self.sheet = None
         self.data = None
 
@@ -48,7 +50,7 @@ class ManagerBank:
                 "Проверьте путь к файлу и повторите попытку."
             )
             return False
-
+        logger.info(f"Ведомость успешно загружена: {self.name_file}")
         return True
 
     def acquire_payments(self):
