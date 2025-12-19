@@ -14,8 +14,6 @@ statement_schema.py
 """
 
 
-
-
 class ExpectedSheets:
     """
         Контейнер констант, описывающий структуру листов ведомости ОСИ.
@@ -49,3 +47,10 @@ class ExpectedSheets:
         'накопительный счет': CUMULATIVE_PAYMENT,
         'целевой счет': PAYMENT_PURPOSE,
     }
+
+
+class ApartmentsSchema(ExpectedSheets):
+    NAME_SHEET = ExpectedSheets.DELIVERY_APARTMENTS
+    ROW_START = 3
+    COLUMN_START = 2
+    EXPECTED_VALUE = 'номер квартиры'
