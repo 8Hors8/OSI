@@ -16,7 +16,7 @@ from openpyxl.workbook import Workbook
 from pathlib import Path
 
 from core.excel_loader import load_excel_file
-
+from statement_processing.statements_utils import checking_sheet_names
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,12 @@ class ManagerStatements:
                 f"Файл '{self.name_file}' загружен, но не содержит листов. "
                 "Ведомость считается некорректной."
             )
+            self.book = None
+            return False
+
+        valid_sheet = checking_sheet_names(self.list_sheets)
+        if not valid_sheet:
+            logger.error(f'Ошибка в файле {self.name_file} нет требуемых листов')
             self.book = None
             return False
 
