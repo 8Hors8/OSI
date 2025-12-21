@@ -17,6 +17,8 @@ from pathlib import Path
 
 from core.excel_loader import load_excel_file
 from statement_processing.statements_utils import checking_sheet_names
+from statement_processing.statements_parser import universal_scan
+from statement_processing.statement_schema import ApartmentsSchema
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,7 @@ class ManagerStatements:
         self.name_file = Path(self.path).name
         self.book: Optional[Workbook] = None
         self.list_sheets:list|None = None
+        self.apartment_numbers:set = set()
 
     def load_statements(self) -> bool:
         """
@@ -80,6 +83,11 @@ class ManagerStatements:
     def _get_list_sheets(self) -> list[str]:
         list_sheets = self.book.sheetnames if self.book is not None else []
         return list_sheets
+
+    def get_apartment_numbers(self,aport_schema):
+
+        self.apartment_numbers = universal_scan(self.book,aport_schema)
+
 
     def save_statement(self) -> bool:
         """
@@ -124,5 +132,6 @@ if __name__ == "__main__":
     statement_path2 = r'D:\googleDriver\ОСИ исходники\тест ведомости.xlsx'
     manager = ManagerStatements(statement_path2)
     manager.load_statements()
+    manager.get_apartment_numbers(ApartmentsSchema)
     print(manager.book.active)
     print(manager.list_sheets)
