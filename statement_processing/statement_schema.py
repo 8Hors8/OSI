@@ -54,3 +54,4 @@ class ApartmentsSchema(ExpectedSheets):
     ROW_START = 3
     COLUMN_START = 2
     EXPECTED_VALUE = 'номер квартиры'
+    SCAN_TYPE = 'row'
