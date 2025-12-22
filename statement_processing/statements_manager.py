@@ -17,10 +17,11 @@ from pathlib import Path
 
 from core.excel_loader import load_excel_file
 from statement_processing.statements_utils import checking_sheet_names
-from statement_processing.statements_parser import universal_scan
+from statement_processing.statements_parser import  UniversalScan
 from statement_processing.statement_schema import ApartmentsSchema
 
 logger = logging.getLogger(__name__)
+
 
 class ManagerStatements:
     """
@@ -36,11 +37,12 @@ class ManagerStatements:
 
         :param path: Полный путь к Excel-файлу ведомости.
         """
+
         self.path: str = path
         self.name_file = Path(self.path).name
         self.book: Optional[Workbook] = None
-        self.list_sheets:list|None = None
-        self.apartment_numbers:set = set()
+        self.list_sheets: list | None = None
+        self.apartment_numbers: list[str] = []
 
     def load_statements(self) -> bool:
         """
@@ -84,10 +86,22 @@ class ManagerStatements:
         list_sheets = self.book.sheetnames if self.book is not None else []
         return list_sheets
 
-    def get_apartment_numbers(self,aport_schema):
+    def get_apartment_numbers(self, apartment_schema):
 
-        self.apartment_numbers = universal_scan(self.book,aport_schema)
+        """
+            Извлекает номера квартир из ведомости по заданной схеме.
+        """
 
+        if self.book is None:
+            logger.error("Невозможно выполнить сканирование: книга не загружена")
+            return []
+
+        scanner = UniversalScan(self.book, apartment_schema)
+        result = scanner.scan()
+
+        self.apartment_numbers = result
+        logger.debug(f'Получены номеров квартир {self.apartment_numbers}')
+        return result
 
     def save_statement(self) -> bool:
         """
@@ -118,6 +132,7 @@ class ManagerStatements:
         except Exception as e:
             logger.error(f"Критическая ошибка при сохранении ведомости: {e}")
             return False
+
 
 if __name__ == "__main__":
     # Настройка базового логирования для отладки модуля
