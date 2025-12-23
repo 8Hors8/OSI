@@ -157,11 +157,47 @@ class UniversalScan:
         return result
 
     def _validate_value(self, value) -> bool:
+        """
+        Проверяет одно значение согласно правилам схемы.
 
-        value_type = getattr(self.schema, "VALUE_TYPE")
-        if value_type is None:
-            return True
-        return isinstance(value, value_type)
+        Возвращает True — значение допустимо и может быть добавлено.
+        Возвращает False — значение игнорируется.
+        """
 
-    def _validate_value_type(self):
-        pass
+        # 1. IGNORE_VALUES
+        ignore_values = getattr(self.schema, "IGNORE_VALUES", set())
+        if value in ignore_values:
+            logger.info(f"Значение '{value}' проигнорировано (IGNORE_VALUES)")
+            return False
+
+        # 2. Пустые значения
+        allow_empty = getattr(self.schema, "ALLOW_EMPTY", True)
+        if value is None:
+            if allow_empty:
+                return True
+            logger.info("Пустое значение запрещено (ALLOW_EMPTY=False)")
+            return False
+
+        # 3. Тип значения
+        value_type = getattr(self.schema, "VALUE_TYPE", None)
+        if value_type is not None and not isinstance(value, value_type):
+            logger.info(
+                f"Неверный тип значения: {value} ({type(value)}), ожидался {value_type}"
+            )
+            return False
+
+        # 4. Ограничения min / max
+        min_value = getattr(self.schema, "MIN_VALUE", None)
+        max_value = getattr(self.schema, "MAX_VALUE", None)
+
+        if min_value is not None and value < min_value:
+            logger.info(f"Значение {value} меньше MIN_VALUE={min_value}")
+            return False
+
+        if max_value is not None and value > max_value:
+            logger.info(f"Значение {value} больше MAX_VALUE={max_value}")
+            return False
+
+        return True
+
+
