@@ -43,6 +43,7 @@ def extract_apartment_number(apartment_data: str) -> Optional[str]:
     if len(parts) < 6:
         return None
 
+
     raw_value = parts[5]
 
     # Оставляем ТОЛЬКО цифры
@@ -96,7 +97,8 @@ def normalize_date(date_obj, ) -> Optional[str]:
     return None
 
 
-def has_payment_errors(apartment_number: str, sum_payment: int, date_payment: str) -> bool:
+def has_payment_errors(apartment_number: str, sum_payment: int, date_payment: str,
+                       apartment_number_reference: set) -> bool:
     """
     Проверяет корректность данных платежа.
 
@@ -119,11 +121,15 @@ def has_payment_errors(apartment_number: str, sum_payment: int, date_payment: st
         if value is None:
             logger.error(f'{field} задан(а) некорректно')
             has_error = True
+        if field == 'Квартира':
+            if int(value) not in apartment_number_reference:
+                logger.error(f'Не корректный номер квартиры "{value}"')
+                has_error = True
 
     return has_error
 
 
-def acquisition_data(sheet) -> Optional[dict[str, list[dict[str, str]]]]:
+def acquisition_data(sheet, apartment_number_reference: set) -> Optional[dict[str, list[dict[str, str]]]]:
     """
     Извлекает и агрегирует данные платежей из банковского Excel-листа.
 
@@ -155,7 +161,8 @@ def acquisition_data(sheet) -> Optional[dict[str, list[dict[str, str]]]]:
             sum_payment = int(sheet.cell(row=row, column=4).value)
             date_payment = normalize_date(sheet.cell(row=row, column=5).value)
 
-            validator_value = has_payment_errors(apartment_number, sum_payment, date_payment)
+            validator_value = has_payment_errors(apartment_number, sum_payment, date_payment,
+                                                 apartment_number_reference)
             if validator_value:
                 logger.error(f'Ошибка в строке {row}')
                 continue
