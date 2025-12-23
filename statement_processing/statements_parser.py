@@ -37,6 +37,8 @@ class UniversalScan:
         self.column_start = getattr(schema, "COLUMN_START")
         self.expected_value = str(getattr(schema, "EXPECTED_VALUE")).lower()
         self.scan_type = getattr(schema, "SCAN_TYPE")
+        self.row_offset = getattr(self.schema, "ROW_OFFSET", 1)
+        self.column_offset = getattr(self.schema, "COLUMN_OFFSET", )
 
         header_value = self.sheet.cell(
             row=self.row_start,
@@ -89,19 +91,21 @@ class UniversalScan:
         :return: Список значений.
         """
         result = []
-        row_offset = getattr(self.schema, "ROW_OFFSET", 1)
 
         for row in range(
-                self.row_start + row_offset,
+                self.row_start + self.row_offset,
                 self.sheet.max_row + 1
         ):
             value = self.sheet.cell(
                 row=row,
-                column=self.column_start
+                column=self.column_start + self.column_offset
             ).value
 
             if self._validate_value(value):
                 result.append(value)
+            else:
+                logger.warning(f"Невалидное значение в ячейке "
+                               f"{row}:{self.column_start + self.column_offset} — {value}")
 
         return result
 
@@ -112,19 +116,21 @@ class UniversalScan:
         :return: Список значений.
         """
         result = []
-        column_offset = getattr(self.schema, "COLUMN_OFFSET", 1)
 
         for column in range(
-                self.column_start + column_offset,
+                self.column_start + self.column_offset,
                 self.sheet.max_column + 1
         ):
             value = self.sheet.cell(
-                row=self.row_start,
+                row=self.row_start + self.row_offset,
                 column=column
             ).value
 
             if self._validate_value(value):
                 result.append(value)
+            else:
+                logger.warning(f"Невалидное значение в ячейке "
+                               f"{self.row_start + self.row_offset}:{self.column_start + self.column_offset} — {value}")
 
         return result
 
@@ -135,15 +141,13 @@ class UniversalScan:
         :return: Список значений.
         """
         result = []
-        row_offset = getattr(self.schema, "ROW_OFFSET", 1)
-        column_offset = getattr(self.schema, "COLUMN_OFFSET", 1)
 
         for row in range(
-                self.row_start + row_offset,
+                self.row_start + self.row_offset,
                 self.sheet.max_row + 1
         ):
             for column in range(
-                    self.column_start + column_offset,
+                    self.column_start + self.column_offset,
                     self.sheet.max_column + 1
             ):
                 value = self.sheet.cell(
@@ -153,6 +157,9 @@ class UniversalScan:
 
                 if value is not None:
                     result.append(value)
+                else:
+                    logger.warning(f"Невалидное значение в ячейке "
+                                   f"{self.row_start + self.row_offset}:{self.column_start + self.column_offset} — {value}")
 
         return result
 
@@ -167,7 +174,7 @@ class UniversalScan:
         # 1. IGNORE_VALUES
         ignore_values = getattr(self.schema, "IGNORE_VALUES", set())
         if value in ignore_values:
-            logger.info(f"Значение '{value}' проигнорировано (IGNORE_VALUES)")
+            logger.debug(f"Значение '{value}' проигнорировано (IGNORE_VALUES)")
             return False
 
         # 2. Пустые значения
@@ -175,14 +182,14 @@ class UniversalScan:
         if value is None:
             if allow_empty:
                 return True
-            logger.info("Пустое значение запрещено (ALLOW_EMPTY=False)")
+            logger.debug("Пустое значение запрещено (ALLOW_EMPTY=False)")
             return False
 
         # 3. Тип значения
         value_type = getattr(self.schema, "VALUE_TYPE", None)
         if value_type is not None and not isinstance(value, value_type):
-            logger.info(
-                f"Неверный тип значения: {value} ({type(value)}), ожидался {value_type}"
+            logger.debug(
+                f'Неверный тип значения: "{value}" - ({type(value)}), ожидался {value_type}'
             )
             return False
 
@@ -191,13 +198,11 @@ class UniversalScan:
         max_value = getattr(self.schema, "MAX_VALUE", None)
 
         if min_value is not None and value < min_value:
-            logger.info(f"Значение {value} меньше MIN_VALUE={min_value}")
+            logger.debug(f"Значение {value} меньше MIN_VALUE={min_value}")
             return False
 
         if max_value is not None and value > max_value:
-            logger.info(f"Значение {value} больше MAX_VALUE={max_value}")
+            logger.debug(f"Значение {value} больше MAX_VALUE={max_value}")
             return False
 
         return True
-
-
