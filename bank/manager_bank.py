@@ -18,7 +18,7 @@ import logging
 from pathlib import Path
 
 from core.excel_loader import load_excel_file
-from .bank_parser import  acquisition_data
+from .bank_parser import acquisition_data
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +50,10 @@ class ManagerBank:
                 "Проверьте путь к файлу и повторите попытку."
             )
             return False
-        logger.info(f"Ведомость успешно загружена: {self.name_file}")
+        logger.info(f'Банковский файл успешно загружен: "{self.name_file}"')
         return True
 
-    def acquire_payments(self):
+    def acquire_payments(self, apartment_number: list) -> list:
         """
         Выполняет парсинг банковского листа Excel и инициализирует основной
         словарь данных класса.
@@ -69,9 +69,10 @@ class ManagerBank:
         :raises Exception: Пробрасывает исключения, возникшие в процессе парсинга
                            (например, ошибки чтения ячеек, неверный формат данных).
         """
+        logger.info(f'Выполняется извлечение данных из банковского файла ...')
+        apartment_number_reference = set(apartment_number)
         # acquisition_data — это функция, которая возвращает готовый словарь
-        self.data = acquisition_data(self.sheet)
-
+        self.data = acquisition_data(self.sheet, apartment_number_reference)
 
 if __name__ == '__main__':
     if not logger.hasHandlers():
