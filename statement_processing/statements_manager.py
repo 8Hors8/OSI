@@ -18,7 +18,7 @@ from pathlib import Path
 from core.excel_loader import load_excel_file
 from statement_processing.statements_utils import checking_sheet_names
 from statement_processing.statements_parser import  UniversalScan
-from statement_processing.statement_schema import ApartmentsSchema
+
 
 logger = logging.getLogger(__name__)
 
@@ -137,9 +137,10 @@ class ManagerStatements:
 
 if __name__ == "__main__":
     # Настройка базового логирования для отладки модуля
+    from statement_processing.statement_schema import ApartmentsSchema
     if not logger.hasHandlers():
         logging.basicConfig(
-            level=logging.INFO,
+            level=logging.DEBUG,
             format="[%(asctime)s.%(msecs)03d] %(module)s:%(lineno)d %(levelname)7s - %(message)s"
         )
 
