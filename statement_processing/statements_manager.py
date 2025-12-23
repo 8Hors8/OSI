@@ -78,7 +78,7 @@ class ManagerStatements:
             self.book = None
             return False
 
-        logger.info(f"Ведомость успешно загружена: {self.name_file}")
+        logger.info(f'Ведомость успешно загружена: "{self.name_file}"')
         logger.debug(f"Список листов: {self.list_sheets}")
         return True
 
@@ -91,7 +91,7 @@ class ManagerStatements:
         """
             Извлекает номера квартир из ведомости по заданной схеме.
         """
-
+        logger.info(f'Идет получение номеров квартир...')
         if self.book is None:
             logger.error("Невозможно выполнить сканирование: книга не загружена")
             return []
@@ -101,6 +101,7 @@ class ManagerStatements:
 
         self.apartment_numbers = result
         logger.debug(f'Получены номеров квартир {self.apartment_numbers}')
+        logger.info(f'Номера квартир были получены')
         return result
 
     def save_statement(self) -> bool:
@@ -138,7 +139,7 @@ if __name__ == "__main__":
     # Настройка базового логирования для отладки модуля
     if not logger.hasHandlers():
         logging.basicConfig(
-            level=logging.DEBUG,
+            level=logging.INFO,
             format="[%(asctime)s.%(msecs)03d] %(module)s:%(lineno)d %(levelname)7s - %(message)s"
         )
 
