@@ -31,7 +31,7 @@ class ManagerStatements:
     завершение программы при ошибках чтения или записи.
     """
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, ):
         """
         Инициализирует менеджер ведомости.
 

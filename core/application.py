@@ -7,6 +7,8 @@ import logging
 from bank.manager_bank import ManagerBank
 from statement_processing.statements_manager import ManagerStatements
 from statement_processing.statement_schema import ApartmentsSchema
+from core.logging.domain_logger import DomainLogger
+from core.logging.events import LogLevel,LogEvent
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +20,18 @@ class OSIApplication:
     """
 
     def __init__(self, bank_path: str, statement_path: str):
+        self.logger = logging.getLogger("OSIApplication")
+        self.domain_logger = DomainLogger(self.logger)
         self.bank_path = bank_path
         self.statement_path = statement_path
         self.bank = None
         self.statement = None
 
     def run(self):
+        self.domain_logger.log(LogEvent(level= LogLevel.INFO,
+                                        code="APP_START",
+                                        message = "запуск помощника...")
+                               )
         self.statement = ManagerStatements(self.statement_path)
         self.statement.load_statements()
         apartment_numbers = self.statement.get_apartment_numbers(ApartmentsSchema)
