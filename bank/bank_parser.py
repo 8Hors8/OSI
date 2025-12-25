@@ -98,7 +98,7 @@ def normalize_date(date_obj, ) -> Optional[str]:
 
 
 def has_payment_errors(apartment_number: str, sum_payment: int, date_payment: str,
-                       apartment_number_reference: set) -> bool:
+                       apartment_number_reference: set) -> tuple[bool, list[dict[str, str | int]]]:
     """
     Проверяет корректность данных платежа.
 
@@ -108,25 +108,43 @@ def has_payment_errors(apartment_number: str, sum_payment: int, date_payment: st
     :param apartment_number: Номер квартиры.
     :param sum_payment: Сумма платежа.
     :param date_payment: Дата платежа.
+    :param apartment_number_reference: Эталонный набор номеров квартир.
     :return: True, если обнаружена хотя бы одна ошибка, иначе False.
     """
-    errors = {
-        'Квартира': apartment_number,
-        'Сумма': sum_payment,
-        'Дата': date_payment,
-    }
-
     has_error = False
-    for field, value in errors.items():
-        if value is None:
-            logger.error(f'{field} задан(а) некорректно')
-            has_error = True
-        if field == 'Квартира':
-            if int(value) not in apartment_number_reference:
-                logger.error(f'Не корректный номер квартиры "{value}"')
-                has_error = True
+    log_messages = []
 
-    return has_error
+    # квартира
+    if apartment_number is None:
+        log_messages.append({
+            'message': 'Квартира задана некорректно',
+            'code': 'INVALID_APARTMENT'
+        })
+        has_error = True
+    elif int(apartment_number) not in apartment_number_reference:
+        log_messages.append({
+            'message': f'Не корректный номер квартиры "{apartment_number}"',
+            'code': 'INVALID_APARTMENT'
+        })
+        has_error = True
+
+    # сумма
+    if sum_payment is None:
+        log_messages.append({
+            'message': 'Сумма задана некорректно',
+            'code': 'INVALID_SUM'
+        })
+        has_error = True
+
+    # дата
+    if date_payment is None:
+        log_messages.append({
+            'message': 'Дата задана некорректно',
+            'code': 'INVALID_DATE'
+        })
+        has_error = True
+
+    return has_error, log_messages
 
 
 def acquisition_data(sheet, apartment_number_reference: set) -> Optional[dict[str, list[dict[str, str]]]]:
@@ -149,6 +167,7 @@ def acquisition_data(sheet, apartment_number_reference: set) -> Optional[dict[st
     }
 
     :param sheet: Активный лист Excel с банковскими данными.
+    :param apartment_number_reference: Эталонный набор номеров квартир.
     :return: Словарь с агрегированными платежами или None при ошибке.
     """
     result = {}
@@ -161,10 +180,12 @@ def acquisition_data(sheet, apartment_number_reference: set) -> Optional[dict[st
             sum_payment = int(sheet.cell(row=row, column=4).value)
             date_payment = normalize_date(sheet.cell(row=row, column=5).value)
 
-            validator_value = has_payment_errors(apartment_number, sum_payment, date_payment,
+            validator_value, log_messages = has_payment_errors(apartment_number, sum_payment, date_payment,
                                                  apartment_number_reference)
             if validator_value:
-                logger.error(f'Ошибка в строке {row}')
+                for log in log_messages:
+                    logger.error(f'Ошибка в строке {row}: "{log["message"]}',
+                    extra={'code':log['code']})
                 continue
 
             add_dict = {'type': payment_type.lower(), 'sum': sum_payment, 'date': date_payment}
