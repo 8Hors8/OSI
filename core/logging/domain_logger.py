@@ -1,41 +1,79 @@
 """
 domain_logger.py
+
+Модуль содержит инфраструктурные компоненты доменного логирования.
+
+Назначение модуля:
+- перехват стандартных сообщений logging;
+- сохранение лог-событий в структурированном виде;
+- подготовка данных для использования в GUI или других слоях приложения.
+
+Модуль НЕ отвечает за:
+- вывод логов в консоль;
+- форматирование текстовых логов;
+- бизнес-логику обработки ошибок.
 """
 
-from core.logging.events import LogEvent,LogLevel
+import logging
 
-class DomainLogger:
-    def __init__(self, logger):
-        self._logger = logger
-        self.events: list[LogEvent] = []
 
-    def log(self, event: LogEvent):
-        # 1. Сохраняем событие для GUI
-        self.events.append(event)
+class DomainLogListener(logging.Handler):
+    """
+    Слушатель логов для доменного уровня приложения.
 
-        # 2. Логируем в файл / консоль
-        text = self._format_event(event)
+    Класс наследуется от logging.Handler и предназначен для:
+    - перехвата лог-сообщений из стандартного logging;
+    - извлечения структурированных данных из LogRecord;
+    - сохранения событий в переданное хранилище (обычно список).
 
-        if event.level == LogLevel.ERROR:
-            self._logger.error(text)
-        elif event.level == LogLevel.WARNING:
-            self._logger.warning(text)
-        else:
-            self._logger.info(text)
+    Используется как инфраструктурный слой между:
+    - логированием в коде (logger.error / logger.warning / logger.info);
+    - GUI или другим потребителем событий (например, отчёт, алертинг).
 
-    def has_errors(self) -> bool:
-        return any(e.level == LogLevel.ERROR for e in self.events)
+    Пример использования:
+        log_events = []
+        handler = DomainLogListener(log_events)
+        handler.setLevel(logging.WARNING)
+        logging.getLogger().addHandler(handler)
 
-    def _format_event(self, event: LogEvent) -> str:
-        parts = [f"[{event.code}]", event.message]
+    После выполнения программы список log_events будет содержать
+    все перехваченные события заданного уровня и выше.
+    """
 
-        if event.row is not None:
-            parts.append(f"ROW={event.row}")
+    def __init__(self, storage: list):
+        """
+        Инициализирует слушатель логов.
 
-        if event.raw_value is not None:
-            parts.append(f"RAW='{event.raw_value}'")
+        :param storage: Изменяемое хранилище (обычно list),
+                        в которое будут добавляться лог-события.
+                        Формат одного события — словарь.
+        """
+        super().__init__()
+        self.storage = storage
 
-        if event.parsed_value is not None:
-            parts.append(f"PARSED='{event.parsed_value}'")
+    def emit(self, record: logging.LogRecord) -> None:
+        """
+        Обрабатывает одно лог-событие.
 
-        return " | ".join(parts)
+        Метод вызывается системой logging автоматически
+        при поступлении нового LogRecord.
+
+        Извлекает из record:
+        - уровень логирования;
+        - имя логгера (модуля);
+        - текст сообщения;
+        - номер строки;
+        - дополнительный доменный код (если передан через extra).
+
+        Результат сохраняется в self.storage в виде словаря.
+
+        :param record: Объект LogRecord, сформированный logging.
+        """
+
+        self.storage.append({
+            "level": record.levelname,
+            "module": record.name,
+            "message": record.getMessage(),
+            "line": record.lineno,
+            "code": getattr(record, "code", None),
+        })

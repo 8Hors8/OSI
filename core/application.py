@@ -7,7 +7,7 @@ import logging
 from bank.manager_bank import ManagerBank
 from statement_processing.statements_manager import ManagerStatements
 from statement_processing.statement_schema import ApartmentsSchema
-from core.logging.domain_logger import DomainLogger
+from core.logging.domain_logger import DomainLogListener
 from core.logging.events import LogLevel,LogEvent
 
 logger = logging.getLogger(__name__)
@@ -21,17 +21,14 @@ class OSIApplication:
 
     def __init__(self, bank_path: str, statement_path: str):
         self.logger = logging.getLogger("OSIApplication")
-        self.domain_logger = DomainLogger(self.logger)
+
         self.bank_path = bank_path
         self.statement_path = statement_path
         self.bank = None
         self.statement = None
 
     def run(self):
-        self.domain_logger.log(LogEvent(level= LogLevel.INFO,
-                                        code="APP_START",
-                                        message = "запуск помощника...")
-                               )
+        logging.info("Запуск помощника ОСИ...")
         self.statement = ManagerStatements(self.statement_path)
         self.statement.load_statements()
         apartment_numbers = self.statement.get_apartment_numbers(ApartmentsSchema)
@@ -42,13 +39,29 @@ class OSIApplication:
 
 
 if __name__ == '__main__':
-    if not logger.hasHandlers():
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="[%(asctime)s.%(msecs)03d] %(module)s:%(lineno)d %(levelname)7s - %(message)s"
-        )
-    bank_path1 = r'D:\googleDriver\ОСИ исходники\пробный вариант.xlsx'
-    statement_path1 = r'D:\googleDriver\ОСИ исходники\тест ведомости.xlsx'
-    app = OSIApplication(bank_path1, statement_path1)
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+
+    # 🟢 КОНСОЛЬ
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(logging.Formatter(
+        "[%(asctime)s.%(msecs)03d] %(module)s:%(lineno)d %(levelname)7s - %(message)s"
+    ))
+    root.addHandler(console)
+    # 🟣 GUI / память
+    log_events: list = []
+    gui_handler = DomainLogListener(log_events)
+    gui_handler.setLevel(logging.WARNING)
+    root.addHandler(gui_handler)
+
+    # 🔹 запуск
+    bank_path = r'D:\googleDriver\ОСИ исходники\пробный вариант.xlsx'
+    statement_path = r'D:\googleDriver\ОСИ исходники\тест ведомости.xlsx'
+
+    app = OSIApplication(bank_path, statement_path)
     app.run()
-    print(app.bank.data)
+
+    print("События для GUI:")
+    for e in log_events:
+        print(e)
