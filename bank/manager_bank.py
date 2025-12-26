@@ -16,6 +16,7 @@ ManagerBank не выполняет бизнес-логику разноски �
 """
 import logging
 from pathlib import Path
+from typing import Optional
 
 from core.excel_loader import load_excel_file
 from .bank_parser import acquisition_data
@@ -53,7 +54,7 @@ class ManagerBank:
         logger.info(f'Банковский файл успешно загружен: "{self.name_file}"')
         return True
 
-    def acquire_payments(self, apartment_number: list) -> list:
+    def acquire_payments(self, apartment_number: list) -> Optional[dict[str, list[dict[str, str]]]]:
         """
         Выполняет парсинг банковского листа Excel и инициализирует основной
         словарь данных класса.
@@ -73,6 +74,7 @@ class ManagerBank:
         apartment_number_reference = set(apartment_number)
         # acquisition_data — это функция, которая возвращает готовый словарь
         self.data = acquisition_data(self.sheet, apartment_number_reference)
+        return self.data
 
 if __name__ == '__main__':
     if not logger.hasHandlers():

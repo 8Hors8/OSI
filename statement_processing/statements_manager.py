@@ -18,6 +18,7 @@ from pathlib import Path
 from core.excel_loader import load_excel_file
 from statement_processing.statements_utils import checking_sheet_names
 from statement_processing.statements_parser import  UniversalScan
+from statement_processing.distribution.payment_distributor import PaymentDistributor
 
 
 logger = logging.getLogger(__name__)
@@ -104,6 +105,16 @@ class ManagerStatements:
         logger.info(f'Номера квартир были получены')
         return result
 
+    def distribute_payments (self, payments_from_bank: list[dict[str,dict[str,str]]]) -> list[str]:
+        """
+        Запускает бизнес-логику разноски платежей по ведомости.
+
+        :param payments: данные банка, подготовленные ManagerBank
+        :return: список событий (ошибки / предупреждения / отчёт)
+        """
+        distributor = PaymentDistributor(self.book, payments_from_bank)
+        pass
+
     def save_statement(self) -> bool:
         """
         Выполняет сохранение текущего состояния книги по исходному пути.
@@ -125,7 +136,7 @@ class ManagerStatements:
 
         except PermissionError:
             logger.error(
-                f"Отказано в доступе: файл '{self.path}' открыт в другой программе. "
+                f"Отказано в доступе: файл '{self.name_file}' открыт в другой программе. "
                 "Пожалуйста, закройте Excel и повторите попытку сохранения."
             )
             return False

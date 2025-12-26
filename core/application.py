@@ -8,7 +8,7 @@ from bank.manager_bank import ManagerBank
 from statement_processing.statements_manager import ManagerStatements
 from statement_processing.statement_schema import ApartmentsSchema
 from core.logging.domain_logger import DomainLogListener
-from core.logging.events import LogLevel,LogEvent
+
 
 logger = logging.getLogger(__name__)
 
@@ -34,17 +34,20 @@ class OSIApplication:
         apartment_numbers = self.statement.get_apartment_numbers(ApartmentsSchema)
         self.bank = ManagerBank(self.bank_path)
         self.bank.load_sheet()
-        self.bank.acquire_payments(apartment_numbers)
 
+        payments_from_bank = self.bank.acquire_payments(apartment_numbers)
+        logger.debug(f'payments_from_bank - {payments_from_bank}')
+
+        # self.statement.save_statement()
 
 
 if __name__ == '__main__':
     root = logging.getLogger()
-    root.setLevel(logging.INFO)
+    root.setLevel(logging.DEBUG)
 
     # 🟢 КОНСОЛЬ
     console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
+    console.setLevel(logging.DEBUG)
     console.setFormatter(logging.Formatter(
         "[%(asctime)s.%(msecs)03d] %(module)s:%(lineno)d %(levelname)7s - %(message)s"
     ))
