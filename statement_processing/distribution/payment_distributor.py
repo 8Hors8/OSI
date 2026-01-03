@@ -4,6 +4,8 @@ payment_distributor.py
 import logging
 from typing import Optional
 
+from statement_processing.statement_schema import ExpectedSheets
+
 logger = logging.getLogger(__file__)
 
 
@@ -13,16 +15,25 @@ class PaymentDistributor:
     согласно бизнес-правилам.
     """
 
-    def __init__(self, book, payments_from_bank: list[dict[str,dict[str,str]]]):
+    def __init__(self, book, payments_from_bank: Optional[dict[str, list[dict[str, str]]]]):
         self.book = book
         self.bank_payments = payments_from_bank
-        self.month = None
+        self.month_name = None
+        self.month_number = None
+        self.expected_sheets = ExpectedSheets()
 
+    def _getting_month(self, month: int | str) -> Optional[str]:
+        """
+        Если передан int (1–12) → возвращает название месяца (str).
+        Если передана строка с названием месяца → возвращает номер месяца (int).
+        Если определить невозможно → None.
+        """
+        try:
+            month = int(month)
+        except:
+            pass
 
-
-    def _getting_month(self, number_month: int) -> Optional[str]:
-
-        months_ru = {
+        months = {
             1: "ЯНВАРЬ",
             2: "ФЕВРАЛЬ",
             3: "МАРТ",
@@ -37,8 +48,50 @@ class PaymentDistributor:
             12: "ДЕКАБРЬ",
         }
 
-        self.month = months_ru.get(number_month)
+        # обратный словарь
+        processed_value = month
+        if isinstance(month, str):
+            cleaned = month.strip()
+            if cleaned.isdigit():
+                processed_value = int(cleaned)
+            else:
+                processed_value = cleaned.upper()
 
+        # 2. Логика "Номер -> Название"
+        if isinstance(processed_value, int):
+            result = months.get(processed_value)
+            self.month_name = result
+            logger.debug(f"Поиск по номеру месяца {processed_value}: {result or 'не найден'}")
+            return result
 
-        logger.debug(f'месяц {'выбран' if self.month is not None else 'Не выбран'} {self.month}')
-        return self.month
+        # 3. Логика "Название -> Номер"
+        if isinstance(processed_value, str):
+            # Создаем обратный словарь "на лету" или вынеси его в атрибуты класса
+            months_reverse = {v: k for k, v in months.items()}
+            result = months_reverse.get(processed_value)
+            self.month_number = result
+            logger.debug(f"Поиск по названию месяца '{processed_value}': {result or 'не найден'}")
+            return result
+
+        return None
+
+    def _search_match_sheet(self, name_sheet: str) -> str:
+
+        match = self.expected_sheets.CORRESPONDENCE.get(name_sheet)
+
+        result = str(match) if match is not None else ""
+
+        status = "выбран" if result else "Не выбран"
+        logger.debug(f'Соответствие листов "{name_sheet}" {status}: "{result}"')
+
+        return result
+
+    def run_test(self):
+        self._search_match_sheet('текущий счет')
+        self._search_match_sheet('текущий')
+
+        self._getting_month(1)
+        self._getting_month("5")
+        self._getting_month(5)
+        self._getting_month(15)
+        self._getting_month('февраль')
