@@ -15,12 +15,22 @@ class PaymentDistributor:
     согласно бизнес-правилам.
     """
 
-    def __init__(self, book, payments_from_bank: Optional[dict[str, list[dict[str, str]]]]):
+    def __init__(self, book, payments_from_bank: Optional[dict[str, list[dict[str, str]]]],
+                 apartment_numbers:list[str]):
         self.book = book
+        self.apartment_numbers = apartment_numbers
         self.bank_payments = payments_from_bank
         self.month_name = None
         self.month_number = None
         self.expected_sheets = ExpectedSheets()
+
+
+    def start_distribution(self):
+        step = 0
+        while len(self.apartment_numbers) != step:
+            step += 1
+            logger.debug(f'шаги выполнения {step}')
+
 
     def _getting_month(self, month: int | str) -> Optional[str]:
         """
@@ -28,10 +38,6 @@ class PaymentDistributor:
         Если передана строка с названием месяца → возвращает номер месяца (int).
         Если определить невозможно → None.
         """
-        try:
-            month = int(month)
-        except:
-            pass
 
         months = {
             1: "ЯНВАРЬ",
@@ -87,11 +93,4 @@ class PaymentDistributor:
         return result
 
     def run_test(self):
-        self._search_match_sheet('текущий счет')
-        self._search_match_sheet('текущий')
-
-        self._getting_month(1)
-        self._getting_month("5")
-        self._getting_month(5)
-        self._getting_month(15)
-        self._getting_month('февраль')
+        self.start_distribution()

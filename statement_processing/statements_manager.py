@@ -105,15 +105,15 @@ class ManagerStatements:
         logger.info(f'Номера квартир были получены')
         return result
 
-    def distribute_payments (self, payments_from_bank: list[dict[str,dict[str,str]]]) -> list[str]:
+    def distribute_payments (self, payments_from_bank: Optional[dict[str, list[dict[str, str]]]]):
         """
         Запускает бизнес-логику разноски платежей по ведомости.
 
         :param payments: данные банка, подготовленные ManagerBank
         :return: список событий (ошибки / предупреждения / отчёт)
         """
-        distributor = PaymentDistributor(self.book, payments_from_bank)
-        pass
+        distributor = PaymentDistributor(self.book, payments_from_bank, self.apartment_numbers)
+        distributor.run_test()
 
     def save_statement(self) -> bool:
         """

@@ -37,6 +37,7 @@ class OSIApplication:
 
         payments_from_bank = self.bank.acquire_payments(apartment_numbers)
         logger.debug(f'payments_from_bank - {payments_from_bank}')
+        self.statement.distribute_payments(payments_from_bank)
 
         # self.statement.save_statement()
 
