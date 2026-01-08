@@ -5,8 +5,10 @@ import logging
 from typing import Optional
 
 from statement_processing.statement_schema import ExpectedSheets
+from statement_processing.distribution.distribution_utils import cell_values_sheet,writing_cell
+from statement_processing.distribution.distribution_schema import DistributionSchema
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class PaymentDistributor:
@@ -25,11 +27,15 @@ class PaymentDistributor:
         self.expected_sheets = ExpectedSheets()
 
 
-    def start_distribution(self):
-        step = 0
-        while len(self.apartment_numbers) != step:
-            step += 1
-            logger.debug(f'шаги выполнения {step}')
+    def start_distribution(self, schema: type):
+        allocation_apartments_sheet_name = getattr(schema, 'NAME_SHEET', None)
+        allocation_apartments_sheet = self.book[allocation_apartments_sheet_name]
+        max_row = allocation_apartments_sheet.max_row
+        max_col = allocation_apartments_sheet.max_column
+        for row in range(1,max_row):
+            for col in range(1,max_col):
+                cell_values_sheet(allocation_apartments_sheet, row, col)
+
 
 
     def _getting_month(self, month: int | str) -> Optional[str]:
@@ -72,7 +78,6 @@ class PaymentDistributor:
 
         # 3. Логика "Название -> Номер"
         if isinstance(processed_value, str):
-            # Создаем обратный словарь "на лету" или вынеси его в атрибуты класса
             months_reverse = {v: k for k, v in months.items()}
             result = months_reverse.get(processed_value)
             self.month_number = result
@@ -93,4 +98,4 @@ class PaymentDistributor:
         return result
 
     def run_test(self):
-        self.start_distribution()
+        self.start_distribution(DistributionSchema)
