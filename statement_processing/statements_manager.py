@@ -137,7 +137,7 @@ class ManagerStatements:
         except PermissionError:
             logger.error(
                 f"Отказано в доступе: файл '{self.name_file}' открыт в другой программе. "
-                "Пожалуйста, закройте Excel и повторите попытку сохранения."
+                "Пожалуйста, закройте Excel и повторите попытку сохранения."# FIXME(Hors): переделать и доработать ошибки
             )
             return False
 
