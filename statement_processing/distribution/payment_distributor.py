@@ -2,7 +2,10 @@
 payment_distributor.py
 """
 import logging
+import re
 from typing import Optional
+
+from openpyxl.worksheet.worksheet import Worksheet
 
 from statement_processing.statement_schema import ExpectedSheets
 from statement_processing.distribution.distribution_utils import cell_values_sheet,writing_cell
@@ -32,12 +35,22 @@ class PaymentDistributor:
         allocation_apartments_sheet = self.book[allocation_apartments_sheet_name]
         max_row = allocation_apartments_sheet.max_row
         max_col = allocation_apartments_sheet.max_column
-        for row in range(1,max_row):
-            for col in range(1,max_col):
-                cell_values_sheet(allocation_apartments_sheet, row, col)
+        a = self._search_monthly_columns(max_col, allocation_apartments_sheet)
+        logger.debug(f'Значение месяц и столбец {a}')
+        # for row in range(1,max_row):
+        #     for col in range(1,max_col):
+        #         cell_values_sheet(allocation_apartments_sheet, row, col)
 
 
+    def _search_monthly_columns(self, max_col: int, sheet: Worksheet):
+        result = {}
+        for col in range(1,max_col):
+            values = cell_values_sheet(sheet,1, col)
+            if values is not None:
+                value = re.sub(r'\d+','',values).strip().lower() if isinstance(values, str) else values
 
+                result[value] = col
+        return result
     def _getting_month(self, month: int | str) -> Optional[str]:
         """
         Если передан int (1–12) → возвращает название месяца (str).
