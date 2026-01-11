@@ -109,7 +109,7 @@ class ManagerStatements:
         """
         Запускает бизнес-логику разноски платежей по ведомости.
 
-        :param payments: данные банка, подготовленные ManagerBank
+        :param payments: данные банка, подготовленные ManagerBank  # FIXME Доделать docstring
         :return: список событий (ошибки / предупреждения / отчёт)
         """
         distributor = PaymentDistributor(self.book, payments_from_bank, self.apartment_numbers)
