@@ -21,9 +21,9 @@ class PaymentDistributor:
     """
 
     def __init__(self, book, payments_from_bank: Optional[dict[str, list[dict[str, str]]]],
-                 apartment_numbers:list[str]):
+                 apartments_numbers:dict[str,type[int,int]]):
         self.book = book
-        self.apartment_numbers = apartment_numbers
+        self.apartments_numbers = apartments_numbers
         self.bank_payments = payments_from_bank
         self.month_name = None
         self.month_number = None
@@ -32,14 +32,17 @@ class PaymentDistributor:
 
     def start_distribution(self, schema: type):
         allocation_apartments_sheet_name = getattr(schema, 'NAME_SHEET', None)
+        start_apartments_row = getattr(schema,'START_APARTMENTS_ROW',1)
         allocation_apartments_sheet = self.book[allocation_apartments_sheet_name]
         max_row = allocation_apartments_sheet.max_row
         max_col = allocation_apartments_sheet.max_column
-        a = self._search_monthly_columns(max_col, allocation_apartments_sheet)
-        logger.debug(f'Значение месяц и столбец {a}')
-        # for row in range(1,max_row):
-        #     for col in range(1,max_col):
-        #         cell_values_sheet(allocation_apartments_sheet, row, col)
+        dict_month_column = self._search_monthly_columns(max_col, allocation_apartments_sheet)
+        logger.debug(f'Значение месяц и столбец {dict_month_column}')
+        for key, cell in self.apartments_numbers.items():
+            number_apartment = cell_values_sheet(allocation_apartments_sheet,cell[0],cell[1])
+
+            # for col in range(1,max_col):
+            #     cell_values_sheet(allocation_apartments_sheet, row, col)
 
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet):
