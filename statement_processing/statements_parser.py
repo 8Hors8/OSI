@@ -116,7 +116,7 @@ class UniversalScan:
 
         :return: Список значений
         """
-        result = []
+        result = {}
         column = self.column_start + self.column_offset
 
         for row in range(
@@ -126,7 +126,7 @@ class UniversalScan:
             value = self.sheet.cell(row=row, column=column).value
 
             if self._validate_value(value):
-                result.append(value)
+                result[value] = (row,column)
             else:
                 logger.warning(
                     f"Невалидное значение в ячейке {row}:{column} — {value}"

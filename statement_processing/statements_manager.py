@@ -43,7 +43,7 @@ class ManagerStatements:
         self.name_file = Path(self.path).name
         self.book: Optional[Workbook] = None
         self.list_sheets: list | None = None
-        self.apartment_numbers: list[str] = []
+        self.apartment_numbers: dict[str,type[int,int]] = {}
 
     def load_statements(self) -> bool:
         """

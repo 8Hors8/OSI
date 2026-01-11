@@ -31,7 +31,7 @@ class OSIApplication:
         logging.info("Запуск помощника ОСИ...")
         self.statement = ManagerStatements(self.statement_path)
         self.statement.load_statements()
-        apartment_numbers = self.statement.get_apartment_numbers(ApartmentsSchema)
+        apartment_numbers = list(self.statement.get_apartment_numbers(ApartmentsSchema))
         self.bank = ManagerBank(self.bank_path)
         self.bank.load_sheet()
 
