@@ -39,10 +39,26 @@ class PaymentDistributor:
         dict_month_column = self._search_monthly_columns(max_col, allocation_apartments_sheet)
         logger.debug(f'Значение месяц и столбец {dict_month_column}')
         for key, cell in self.apartments_numbers.items():
-            number_apartment = cell_values_sheet(allocation_apartments_sheet,cell[0],cell[1])
+            self._test_name(allocation_apartments_sheet, str(key), cell[0],dict_month_column)
 
-            # for col in range(1,max_col):
-            #     cell_values_sheet(allocation_apartments_sheet, row, col)
+
+    def _process_apartment_payments(self, sheet: Worksheet,apartment_number: str, row: int, dict_month_column: dict ):
+        """
+        Обрабатывает платежи одной квартиры и подготавливает их к разноске.
+
+        Метод:
+        - извлекает банковские платежи по квартире;
+        - сопоставляет их с колонками месяцев в ведомости;
+        - определяет, какие суммы и в какие ячейки должны быть разнесены;
+        - выполняет логирование расхождений и проблемных ситуаций.
+
+        Метод не выполняет запись в Excel напрямую,
+        а отвечает за анализ и подготовку данных для разноски.
+        """
+
+
+        a = self.bank_payments.get(apartment_number, None)
+        logger.debug(f'получение из лплатежной ведомости {apartment_number}-{a}')
 
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet):
