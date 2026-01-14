@@ -75,24 +75,52 @@ def group_daily_payments(result_payment: list, add_dict: dict) -> Optional[list[
     return result_payment
 
 
-def normalize_date(date_obj, ) -> Optional[str]:
+def normalize_date(date_obj) -> Optional[str]:
     """
-    Приводит дату платежа к строковому формату 'ДД.ММ.ГГГГ'.
+    Приводит дату платежа к строковому формату 'ММ.ГГГГ'.
 
     Поддерживает:
-    - datetime.datetime;
-    - строку вида 'YYYY-MM-DD', 'DD.MM.YYYY', 'YYYY-MM-DD HH:MM:SS'.
+    - datetime.datetime
+    - строки форматов:
+        'YYYY-MM-DD'
+        'YYYY-MM-DD HH:MM:SS'
+        'DD.MM.YYYY'
+        'MM.YYYY'
+        'MM-YYYY'
 
-    :param date_obj: Объект datetime или строка с датой.
-    :return: Дата в формате 'ДД.ММ.ГГГГ' или None, если формат неизвестен.
+    :param date_obj: Объект datetime или строка с датой
+    :return: Дата в формате 'ММ.ГГГГ' или None, если формат не распознан
     """
 
+    # 1. datetime → MM.YYYY
     if isinstance(date_obj, datetime):
-        return str(date_obj.strftime('%d.%m.%Y'))
+        return date_obj.strftime('%m.%Y')
 
+    # 2. строка
     if isinstance(date_obj, str):
-        date_obj = date_obj.strip().split(' ')[0].replace('-', '.')
-        return str(date_obj)
+        value = date_obj.strip()
+
+        # убираем время если есть
+        value = value.split(' ')[0]
+
+        # унифицируем разделители
+        value = value.replace('-', '.')
+
+        parts = value.split('.')
+
+        try:
+            # DD.MM.YYYY
+            if len(parts) == 3:
+                day, month, year = parts
+                return f"{int(month):02d}.{int(year)}"
+
+            # MM.YYYY
+            if len(parts) == 2:
+                month, year = parts
+                return f"{int(month):02d}.{int(year)}"
+
+        except ValueError:
+            return None
 
     return None
 
