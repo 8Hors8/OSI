@@ -39,7 +39,7 @@ class PaymentDistributor:
         dict_month_column = self._search_monthly_columns(max_col, allocation_apartments_sheet)
         logger.debug(f'Значение месяц и столбец {dict_month_column}')
         for key, cell in self.apartments_numbers.items():
-            self._test_name(allocation_apartments_sheet, str(key), cell[0],dict_month_column)
+            self._process_apartment_payments(allocation_apartments_sheet, str(key), cell[0],dict_month_column)
 
 
     def _process_apartment_payments(self, sheet: Worksheet,apartment_number: str, row: int, dict_month_column: dict ):
@@ -57,8 +57,12 @@ class PaymentDistributor:
         """
 
 
-        a = self.bank_payments.get(apartment_number, None)
-        logger.debug(f'получение из лплатежной ведомости {apartment_number}-{a}')
+        list_payments = self.bank_payments.get(apartment_number, None)
+        if list_payments is None:
+            logger.debug(f'квартира с №{apartment_number} нет оплатилаты ')
+            return
+        for payment in list_payments:
+            logger.debug(f'Платежи квартиры {apartment_number}-{payment}')
 
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet):
