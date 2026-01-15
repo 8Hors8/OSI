@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     # 🔹 запуск
     bank_path = r'D:\googleDriver\ОСИ исходники\пробный вариант.xlsx'
-    statement_path = r'D:\googleDriver\ОСИ исходники\тест ведомости.xlsx'
+    statement_path = r'D:\googleDriver\ОСИ исходники\тест ведомости v1.xlsx'
 
     app = OSIApplication(bank_path, statement_path)
     app.run()
