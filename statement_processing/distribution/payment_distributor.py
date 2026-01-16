@@ -84,14 +84,20 @@ class PaymentDistributor:
             :param sheet: Лист Excel, в котором выполняется поиск.
             :return: Словарь вида {название_месяца: номер_колонки}.
             """
-        result = {}
+        buffer = {}
         for col in range(1,max_col):
             values = cell_values_sheet(sheet,1, col)
             if values is not None:
                 value = re.sub(r'\d+','',values).strip().lower() if isinstance(values, str) else values
 
-                result[value] = col
+                buffer[value] = {"start_col":col,"columns":{}}
+        result = self._search_children_columns(buffer, sheet)
         return result
+
+    def _search_children_columns(self,buffer: dict, sheet: Worksheet):
+        pass
+
+
     def _getting_month(self, month: int | str) -> Optional[str]:
         """
         Если передан int (1–12) → возвращает название месяца (str).
