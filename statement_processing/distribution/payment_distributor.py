@@ -8,7 +8,8 @@ from typing import Optional
 from openpyxl.worksheet.worksheet import Worksheet
 
 from statement_processing.statement_schema import ExpectedSheets
-from statement_processing.distribution.distribution_utils import cell_values_sheet,writing_cell
+from statement_processing.distribution.distribution_utils import (cell_values_sheet, writing_cell,
+                                                                  get_sorted_month_starts, build_column_ranges)
 from statement_processing.distribution.distribution_schema import DistributionSchema
 
 logger = logging.getLogger(__name__)
@@ -21,28 +22,28 @@ class PaymentDistributor:
     """
 
     def __init__(self, book, payments_from_bank: Optional[dict[str, list[dict[str, str]]]],
-                 apartments_numbers:dict[str,type[int,int]]):
+                 apartments_numbers: dict[str, tuple[int, int]]):
         self.book = book
         self.apartments_numbers = apartments_numbers
         self.bank_payments = payments_from_bank
         self.month_name = None
         self.month_number = None
         self.expected_sheets = ExpectedSheets()
-
+        self.schema = None
 
     def start_distribution(self, schema: type):
+        self.schema = schema
         allocation_apartments_sheet_name = getattr(schema, 'NAME_SHEET', None)
-        start_apartments_row = getattr(schema,'START_APARTMENTS_ROW',1)
+        start_apartments_row = getattr(schema, 'START_APARTMENTS_ROW', 1)
         allocation_apartments_sheet = self.book[allocation_apartments_sheet_name]
         max_row = allocation_apartments_sheet.max_row
         max_col = allocation_apartments_sheet.max_column
         dict_month_column = self._search_monthly_columns(max_col, allocation_apartments_sheet)
         logger.debug(f'Значение месяц и столбец {dict_month_column}')
         for key, cell in self.apartments_numbers.items():
-            self._process_apartment_payments(allocation_apartments_sheet, str(key), cell[0],dict_month_column)
+            self._process_apartment_payments(allocation_apartments_sheet, str(key), cell[0], dict_month_column)
 
-
-    def _process_apartment_payments(self, sheet: Worksheet,apartment_number: str, row: int, dict_month_column: dict ):
+    def _process_apartment_payments(self, sheet: Worksheet, apartment_number: str, row: int, dict_month_column: dict):
         """
         Обрабатывает платежи одной квартиры и подготавливает их к разноске.
 
@@ -56,14 +57,12 @@ class PaymentDistributor:
         а отвечает за анализ и подготовку данных для разноски.
         """
 
-
         list_payments = self.bank_payments.get(apartment_number, None)
         if list_payments is None:
-            logger.debug(f'квартира с №{apartment_number} нет оплатилаты ')
+            logger.debug(f'квартира с №{apartment_number} нет оплаты ')
             return
         for payment in list_payments:
             logger.debug(f'Платежи квартиры {apartment_number}-{payment}')
-
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet):
         """
@@ -85,18 +84,49 @@ class PaymentDistributor:
             :return: Словарь вида {название_месяца: номер_колонки}.
             """
         buffer = {}
-        for col in range(1,max_col):
-            values = cell_values_sheet(sheet,1, col)
+        for col in range(1, max_col):
+            values = cell_values_sheet(sheet, getattr(self.schema, 'STRING_SEARCHING_MONTH', 1), col)
             if values is not None:
-                value = re.sub(r'\d+','',values).strip().lower() if isinstance(values, str) else values
+                value = re.sub(r'\d+', '', values).strip().lower() if isinstance(values, str) else values
 
-                buffer[value] = {"start_col":col,"columns":{}}
+                buffer[value] = {"start_col": col, "columns": {}}
+        logger.debug(f'буфер месяцев {buffer}')
         result = self._search_children_columns(buffer, sheet)
         return result
 
-    def _search_children_columns(self,buffer: dict, sheet: Worksheet):
-        pass
+    def _search_children_columns(self, buffer: dict, sheet: Worksheet):
 
+        items = get_sorted_month_starts(buffer)
+
+        if not items:
+            logger.error('Недостаточно данных для определения диапазонов колонок')
+            return buffer
+
+        ranges = build_column_ranges(items)
+
+        if not ranges:
+            logger.error('Не удалось определить диапазоны колонок месяцев')
+            return buffer
+
+        for month, start_col, end_col in ranges:
+            logger.debug(f'Месяц "{month}": колонки {start_col} → {end_col - 1}')
+
+            buffer[month]['columns'] = {}
+
+            for col in range(start_col, end_col):
+                value = cell_values_sheet(
+                    sheet,
+                    getattr(self.schema, 'SEARCH_STRING_FOR_SUBCOLUMNS', 4),
+                    col
+                )
+
+                if value is not None:
+                    if value in buffer[month]['columns']:
+                        logger.warning(f'Дубликат подколонки "{value}" в месяце "{month}"')
+                    else:
+                        buffer[month]['columns'][value.lower()] = col
+
+        return buffer
 
     def _getting_month(self, month: int | str) -> Optional[str]:
         """

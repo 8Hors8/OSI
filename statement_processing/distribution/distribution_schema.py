@@ -14,3 +14,5 @@ class DistributionSchema(ExpectedSheets):
     NAME_SHEET = ExpectedSheets.DELIVERY_APARTMENTS
     START_APARTMENTS_ROW = 7
     START_APARTMENTS_COLUMN = 2
+    STRING_SEARCHING_MONTH = 1
+    SEARCH_STRING_FOR_SUBCOLUMNS = 4 # строка для поиска под колонок
