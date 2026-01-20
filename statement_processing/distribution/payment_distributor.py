@@ -56,13 +56,19 @@ class PaymentDistributor:
         Метод не выполняет запись в Excel напрямую,
         а отвечает за анализ и подготовку данных для разноски.
         """
-
+        type_payments = None
+        correspondence_sheet = None
         list_payments = self.bank_payments.get(apartment_number, None)
         if list_payments is None:
             logger.debug(f'квартира с №{apartment_number} нет оплаты ')
             return
         for payment in list_payments:
             logger.debug(f'Платежи квартиры {apartment_number}-{payment}')
+            if type_payments is None:
+                type_payments = payment.get('type', None)
+                correspondence_sheet = self._search_match_sheet(type_payments)
+            print(f'{type_payments}, {correspondence_sheet}')
+
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet):
         """
