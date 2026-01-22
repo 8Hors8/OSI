@@ -16,3 +16,17 @@ class DistributionSchema(ExpectedSheets):
     START_APARTMENTS_COLUMN = 2
     STRING_SEARCHING_MONTH = 1
     SEARCH_STRING_FOR_SUBCOLUMNS = 4 # строка для поиска под колонок
+    MONTHS = {
+        1: "январь",
+        2: "февраль",
+        3: "март",
+        4: "апрель",
+        5: "май",
+        6: "июнь",
+        7: "июль",
+        8: "август",
+        9: "сентябрь",
+        10: "октябрь",
+        11: "ноябрь",
+        12: "декабрь",
+    }

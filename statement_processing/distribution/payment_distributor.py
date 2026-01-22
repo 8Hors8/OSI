@@ -29,17 +29,17 @@ class PaymentDistributor:
         self.month_name = None
         self.month_number = None
         self.expected_sheets = ExpectedSheets()
-        self.schema = None
+        self.schema = DistributionSchema()
+        self.months = getattr(self.schema, 'MONTHS', None)
 
-    def start_distribution(self, schema: type):
-        self.schema = schema
-        allocation_apartments_sheet_name = getattr(schema, 'NAME_SHEET', None)
-        start_apartments_row = getattr(schema, 'START_APARTMENTS_ROW', 1)
+    def start_distribution(self):
+        allocation_apartments_sheet_name = getattr(self.schema, 'NAME_SHEET', None)
+        start_apartments_row = getattr(self.schema, 'START_APARTMENTS_ROW', 1)
         allocation_apartments_sheet = self.book[allocation_apartments_sheet_name]
         max_row = allocation_apartments_sheet.max_row
         max_col = allocation_apartments_sheet.max_column
         dict_month_column = self._search_monthly_columns(max_col, allocation_apartments_sheet)
-        logger.debug(f'Значение месяц и столбец {dict_month_column}')
+        logger.debug(f'Значение месяц стартовый столбец столбец и под столбцы {dict_month_column}')
         for key, cell in self.apartments_numbers.items():
             self._process_apartment_payments(allocation_apartments_sheet, str(key), cell[0], dict_month_column)
 
@@ -189,21 +189,6 @@ class PaymentDistributor:
         Если определить невозможно → None.
         """
 
-        months = {
-            1: "январь",
-            2: "февраль",
-            3: "март",
-            4: "апрель",
-            5: "май",
-            6: "июнь",
-            7: "июль",
-            8: "август",
-            9: "сентябрь",
-            10: "октябрь",
-            11: "ноябрь",
-            12: "декабрь",
-        }
-
         # обратный словарь
         processed_value = month
         if isinstance(month, str):
@@ -215,14 +200,14 @@ class PaymentDistributor:
 
         # 2. Логика "Номер -> Название"
         if isinstance(processed_value, int):
-            result = months.get(processed_value)
+            result = self.months.get(processed_value)
             self.month_name = result
             logger.debug(f"Поиск по номеру месяца {processed_value}: {result or 'не найден'}")
             return result
 
         # 3. Логика "Название -> Номер"
         if isinstance(processed_value, str):
-            months_reverse = {v: k for k, v in months.items()}
+            months_reverse = {v: k for k, v in self.months.items()}
             result = months_reverse.get(processed_value)
             self.month_number = result
             logger.debug(f"Поиск по названию месяца '{processed_value}': {result or 'не найден'}")
@@ -268,4 +253,4 @@ class PaymentDistributor:
         return result
 
     def run_test(self):
-        self.start_distribution(DistributionSchema)
+        self.start_distribution()
