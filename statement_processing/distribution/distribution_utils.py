@@ -3,6 +3,8 @@
 distribution_utils.py
 """
 import logging
+import inspect
+from pathlib import Path
 from typing import Optional,Any
 from openpyxl.worksheet.worksheet import Worksheet
 
@@ -30,7 +32,23 @@ def cell_values_sheet (sheet:Worksheet, row:int, column:int)-> Any:
         - Логирует факт чтения ячейки на уровне DEBUG.
     """
     result = sheet.cell(row=row, column=column).value
-    logger.debug(f"Значения ячейки: ({row}:{column})-{result}")
+    try:
+        caller_frame = inspect.stack()[1]
+        caller_function = caller_frame.function
+        caller_line = caller_frame.lineno
+
+        full_path = Path(caller_frame.filename)
+        short_path = "/".join(full_path.parts[-2:])
+
+    except Exception:
+        # На случай, если стек по какой-то причине недоступен
+        caller_function = "unknown"
+        short_path = "unknown"
+        caller_line = 0
+    logger.debug(
+        f"Ячейка ({row}:{column}) -> '{result}' | "
+        f"вызов из: {short_path} -> {caller_function}() : строка.{caller_line}"
+    )
     return result
 
 def writing_cell (sheet:Worksheet, row:int, column:int, value:Any):
