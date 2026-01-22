@@ -19,7 +19,7 @@ import logging
 import openpyxl as op
 import re
 from openpyxl.workbook import Workbook
-from typing import Optional
+from typing import Optional, List, Dict
 from openpyxl.utils.exceptions import InvalidFileException
 from datetime import datetime
 
@@ -43,7 +43,6 @@ def extract_apartment_number(apartment_data: str) -> Optional[str]:
     if len(parts) < 6:
         return None
 
-
     raw_value = parts[5]
 
     # Оставляем ТОЛЬКО цифры
@@ -52,26 +51,48 @@ def extract_apartment_number(apartment_data: str) -> Optional[str]:
     return digits if digits else None
 
 
-def group_daily_payments(result_payment: list, add_dict: dict) -> Optional[list[dict[str, str | int]]]:
+def group_daily_payments(
+        result_payment: List[Dict[str, str | int]],
+        new_payment: Dict[str, str | int]
+) -> List[Dict[str, str | int]]:
     """
-    Группирует платежи по типу счёта и дате платежа.
+    Группирует платежи по типу счёта и месяцу платежа.
 
-    Если в списке уже существует платёж с тем же типом счёта
-    и датой, сумма платежа увеличивается.
-    В противном случае платёж добавляется как новый элемент.
+    Если платёж с тем же типом счёта и месяцем уже существует:
+    - увеличивает сумму;
+    - добавляет дату через '/'.
 
-    :param result_payment: Список ранее обработанных платежей.
-    :param add_dict: Новый платёж в виде словаря
-                     {'type': str, 'sum': int, 'date': str}.
-    :return: Обновлённый список платежей.
+    В противном случае добавляет новый платёж.
+
+    Args:
+        result_payment: Список уже сгруппированных платежей.
+        new_payment: Новый платёж:
+            {
+                'type': str,
+                'sum': int,
+                'date': 'ДД.ММ.ГГГГ'
+            }
+
+    Returns:
+        list: Обновлённый список платежей.
     """
-    typing_payment = add_dict['type']
+
+    new_type = new_payment['type']
+    new_month = new_payment['date'].split('.')[1]
+
     for payment in result_payment:
-        if payment['type'] == typing_payment and payment['date'] == add_dict['date']:
-            payment['sum'] += add_dict['sum']
+        payment_month = payment['date'].split('/')[0].split('.')[1]
+
+        if payment['type'] == new_type and payment_month == new_month:
+            payment['sum'] += new_payment['sum']
+            payment['date'] = f"{payment['date']}/{new_payment['date']}"
             return result_payment
 
-    result_payment.append(add_dict)
+    result_payment.append({
+        'type': new_payment['type'],
+        'sum': new_payment['sum'],
+        'date': new_payment['date'],
+    })
     return result_payment
 
 
@@ -215,11 +236,11 @@ def acquisition_data(sheet, apartment_number_reference: set) -> Optional[dict[st
             date_payment = normalize_date(sheet.cell(row=row, column=5).value)
 
             validator_value, log_messages = has_payment_errors(apartment_number, sum_payment, date_payment,
-                                                 apartment_number_reference)
+                                                               apartment_number_reference)
             if validator_value:
                 for log in log_messages:
                     logger.error(f'Ошибка в строке {row}: "{log["message"]}',
-                    extra={'code':log['code']})
+                                 extra={'code': log['code']})
                 continue
 
             add_dict = {'type': payment_type.lower(), 'sum': sum_payment, 'date': date_payment}
