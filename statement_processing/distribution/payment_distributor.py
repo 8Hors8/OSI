@@ -67,8 +67,18 @@ class PaymentDistributor:
             sum_payments = payment.get('sum', None)
             date_payments = payment.get('date', None)
             month_payments = self._getting_month(str(date_payments).split('.')[0])
+            sheets_map = self._map_payment_sheets_structure()
 
-
+    def _map_payment_sheets_structure(self):
+        sheets_map = {}
+        for bank_account_type, sheet_name in self.schema.CORRESPONDENCE.items():
+            sheet = self.book[sheet_name]
+            max_row = sheet.max_row
+            max_column = sheet.max_column
+            for row in range(1,max_row):
+                logger.debug(f'Идет сканирование листа - {sheet_name}')
+                cell_value = cell_values_sheet(sheet, row,1)
+        return sheets_map
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet)-> dict:
         """
             Сканирует первую строку листа и формирует соответствие
