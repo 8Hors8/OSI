@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 class DistributionSchema(ExpectedSheets):
     NAME_SHEET = ExpectedSheets.DELIVERY_APARTMENTS
+    CORRESPONDENCE = ExpectedSheets.CORRESPONDENCE
     START_APARTMENTS_ROW = 7
     START_APARTMENTS_COLUMN = 2
     STRING_SEARCHING_MONTH = 1
