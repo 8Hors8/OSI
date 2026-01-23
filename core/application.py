@@ -8,6 +8,7 @@ from bank.manager_bank import ManagerBank
 from statement_processing.statements_manager import ManagerStatements
 from statement_processing.statement_schema import ApartmentsSchema
 from core.logging.domain_logger import DomainLogListener
+from core.logging.config_logging import setup_logging
 
 
 logger = logging.getLogger(__name__)
@@ -43,29 +44,15 @@ class OSIApplication:
 
 
 if __name__ == '__main__':
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
+    # ⚙️ Настройка логирования под новую сигнатуру (без log_events)
+    setup_logging(
+        text_widget=None,  # Если будет GUI на Tkinter, передашь сюда виджет
+        console_level=logging.DEBUG
+    )
 
-    # 🟢 КОНСОЛЬ
-    console = logging.StreamHandler()
-    console.setLevel(logging.DEBUG)
-    console.setFormatter(logging.Formatter(
-        "[%(asctime)s.%(msecs)03d] %(module)s:%(lineno)d %(levelname)7s - %(message)s"
-    ))
-    root.addHandler(console)
-    # 🟣 GUI / память
-    log_events: list = []
-    gui_handler = DomainLogListener(log_events)
-    gui_handler.setLevel(logging.WARNING)
-    root.addHandler(gui_handler)
-
-    # 🔹 запуск
+    # 🔹 запуск приложения
     bank_path = r'D:\googleDriver\ОСИ исходники\пробный вариант.xlsx'
     statement_path = r'D:\googleDriver\ОСИ исходники\тест ведомости v1.xlsx'
 
     app = OSIApplication(bank_path, statement_path)
     app.run()
-
-    print("События для GUI:")
-    for e in log_events:
-        print(e)
