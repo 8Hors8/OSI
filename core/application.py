@@ -44,9 +44,10 @@ class OSIApplication:
 
 
 if __name__ == '__main__':
-    # ⚙️ Настройка логирования под новую сигнатуру (без log_events)
+    log_events = []  # Список для GUI
+
     setup_logging(
-        text_widget=None,  # Если будет GUI на Tkinter, передашь сюда виджет
+        log_events=log_events,
         console_level=logging.DEBUG
     )
 
@@ -56,3 +57,7 @@ if __name__ == '__main__':
 
     app = OSIApplication(bank_path, statement_path)
     app.run()
+    if log_events:
+        print("\n--- СОБЫТИЯ ДЛЯ GUI (Warning+) ---")
+        for event in log_events:
+            print(event)

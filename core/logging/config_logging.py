@@ -1,87 +1,101 @@
 import logging
+import datetime
 import sys
-from pathlib import Path
 from typing import List, Dict, Any
 
+
 # ============================================================
-# 🧠 Умный Форматтер: адаптирует детализацию под ситуацию
+# 🧠 Умный Форматтер
 # ============================================================
 class SmartFormatter(logging.Formatter):
-    def __init__(self, fmt_default: str, fmt_full: str, datefmt: str):
+    def __init__(self, fmt_info: str, fmt_debug: str, datefmt: str):
         super().__init__(datefmt=datefmt)
-        self.fmt_default = fmt_default
-        self.fmt_full = fmt_full
+        self.fmt_info = fmt_info  # Краткий
+        self.fmt_debug = fmt_debug  # Подробный
+        self.datefmt = datefmt
 
     def format(self, record: logging.LogRecord) -> str:
-        # 1. Если это ошибка (ERROR) или предупреждение (WARNING) — всегда полный формат
-        if record.levelno >= logging.WARNING:
-            self._style._fmt = self.fmt_full
-        
-        # 2. Если в записи есть атрибут 'custom_caller' (наш маркер для утилит)
-        elif hasattr(record, 'custom_caller'):
-            # Вставляем информацию о вызывающей функции прямо в текст сообщения
-            record.msg = f"{record.msg} | Источник: {record.custom_caller}"
-            self._style._fmt = self.fmt_full
-        
-        # 3. В обычном случае для DEBUG/INFO используем краткий вид
+        # Сохраняем оригинальное сообщение, чтобы не дублировать "Источник" при повторных вызовах
+        original_msg = record.msg
+
+        # 1. Если передано extra={'custom_caller': ...}
+        if hasattr(record, 'custom_caller'):
+            record.msg = f"{original_msg} | Источник: {record.custom_caller}"
+            self._style._fmt = self.fmt_debug
+
+        # 2. Если это DEBUG — используем подробный формат
+        elif record.levelno == logging.DEBUG:
+            self._style._fmt = self.fmt_debug
+
+        # 3. Для INFO, WARNING, ERROR — краткий формат (текст сообщения)
         else:
-            self._style._fmt = self.fmt_default
+            self._style._fmt = self.fmt_info
 
-        return super().format(record)
+        result = super().format(record)
+
+        # Возвращаем оригинальное сообщение записи, чтобы не портить объект record
+        record.msg = original_msg
+        return result
+
 
 # ============================================================
-# 🟢 Обработчики (Handlers)
+# 🟣 Handler для сбора событий GUI
 # ============================================================
-class TextHandler(logging.Handler):
-    """Вывод логов в Tkinter Text виджет."""
-    def __init__(self, text_widget):
+class DomainLogListener(logging.Handler):
+    def __init__(self, events_list: List[Dict[str, Any]]):
         super().__init__()
-        self.text_widget = text_widget
+        self.events_list = events_list
 
-    def emit(self, record):
-        try:
-            msg = self.format(record)
-            # Безопасное обновление GUI из любого потока
-            self.text_widget.after(0, self._append, msg)
-        except Exception:
-            self.handleError(record)
+    def emit(self, record: logging.LogRecord):
+        # Если к хендлеру прикреплен форматтер, используем его для времени
+        if self.formatter:
+            time_str = self.formatter.formatTime(record, self.formatter.datefmt)
+        else:
+            # Если нет — берем текущее время
+            time_str = datetime.datetime.now().strftime("%H:%M:%S")
 
-    def _append(self, msg: str):
-        self.text_widget.configure(state='normal')
-        self.text_widget.insert('end', msg + '\n')
-        self.text_widget.configure(state='disabled')
-        self.text_widget.yview('end')
+        # Собираем данные в список
+        self.events_list.append({
+            "time": time_str,
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "module": record.module,
+            "line": record.lineno,
+            "func": record.funcName
+        })
+
 
 # ============================================================
-# ⚙️ Настройка (Setup)
-# ============================================================
-def setup_logging(text_widget=None, console_level=logging.DEBUG):
+# ⚙️ Настройка логирования
+# ============================================
+def setup_logging(log_events: list = None, console_level=logging.DEBUG):
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
 
     if root.hasHandlers():
         root.handlers.clear()
 
-    # Настройки форматов
     datefmt = "%H:%M:%S"
-    # Консоль: только суть
-    fmt_short = "%(levelname)-7s - %(message)s"
-    # GUI/Ошибки: время, модуль, строка, функция
-    fmt_full = "[%(asctime)s] %(module)s:%(lineno)d [%(funcName)s] %(levelname)s - %(message)s"
 
-    formatter = SmartFormatter(fmt_short, fmt_full, datefmt)
+    # Формат 1: Краткий (для INFO)
+    fmt_info = "%(levelname)-7s - %(message)s"
 
-    # Консоль
+    # Формат 2: Подробный (для DEBUG и спец-вызовов)
+    # [%(asctime)s] %(module)s:%(lineno)d [%(funcName)s] %(levelname)s - %(message)s
+    fmt_debug = "[%(asctime)s] %(module)s:%(lineno)d [%(funcName)s] %(levelname)s - %(message)s"
+
+    formatter = SmartFormatter(fmt_info, fmt_debug, datefmt)
+
+    # --- Консоль ---
     console = logging.StreamHandler()
     console.setLevel(console_level)
     console.setFormatter(formatter)
     root.addHandler(console)
 
-    # Tkinter GUI
-    if text_widget is not None:
-        gui_text = TextHandler(text_widget)
-        gui_text.setLevel(logging.DEBUG)
-        gui_text.setFormatter(formatter)
-        root.addHandler(gui_text)
+    # --- Сборщик событий (log_events) ---
+    if log_events is not None:
+        listener = DomainLogListener(log_events)
+        listener.setLevel(logging.WARNING)
+        root.addHandler(listener)
 
     return root
