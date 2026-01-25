@@ -1,18 +1,16 @@
-
 """
 distribution_utils.py
 """
 import logging
 import sys
 from pathlib import Path
-from typing import Optional,Any
+from typing import Optional, Any
 from openpyxl.worksheet.worksheet import Worksheet
-
 
 logger = logging.getLogger(__file__)
 
 
-def cell_values_sheet (sheet:Worksheet, row:int, column:int)-> Any:
+def cell_values_sheet(sheet: Worksheet, row: int, column: int, log=False) -> Any:
     """
     Возвращает значение ячейки Excel-листа по указанным координатам.
 
@@ -38,14 +36,16 @@ def cell_values_sheet (sheet:Worksheet, row:int, column:int)-> Any:
     caller_info = f"{f.f_code.co_name}:{f.f_lineno}"
 
     # Передаем это через 'extra'. SmartFormatter сам поймет, что это нужно логгировать подробно.
-    logger.debug(
-        f"Ячейка ({row}:{column}) -> '{result}'",
-        extra={'custom_caller': caller_info}
-    )
+    if log:
+        logger.debug(
+            f"Ячейка ({row}:{column}) -> '{result}'",
+            extra={'custom_caller': caller_info}
+        )
 
     return result
 
-def writing_cell (sheet:Worksheet, row:int, column:int, value:Any):
+
+def writing_cell(sheet: Worksheet, row: int, column: int, value: Any):
     """
     Записывает значение в указанную ячейку Excel-листа.
 
@@ -65,8 +65,9 @@ def writing_cell (sheet:Worksheet, row:int, column:int, value:Any):
         - Функция не выполняет проверку допустимости значения.
         - Логирует факт записи ячейки на уровне DEBUG.
     """
-    sheet.cell(row=row, column=column).value  = value
+    sheet.cell(row=row, column=column).value = value
     logger.debug(f"Запись в ячейку [{row}:{column}]: {value}")
+
 
 def get_sorted_month_starts(buffer: dict) -> list[tuple[str, int]]:
     return sorted(
