@@ -40,10 +40,13 @@ class PaymentDistributor:
         max_col = allocation_apartments_sheet.max_column
         dict_month_column = self._search_monthly_columns(max_col, allocation_apartments_sheet)
         logger.debug(f'Значение месяц стартовый столбец столбец и под столбцы {dict_month_column}')
+        sheets_map = self._map_payment_sheets_structure()
         for key, cell in self.apartments_numbers.items():
-            self._process_apartment_payments(allocation_apartments_sheet, str(key), cell[0], dict_month_column)
+            self._process_apartment_payments(allocation_apartments_sheet, str(key), cell[0], dict_month_column,
+                                             sheets_map)
 
-    def _process_apartment_payments(self, sheet: Worksheet, apartment_number: str, row: int, dict_month_column: dict):
+    def _process_apartment_payments(self, sheet: Worksheet, apartment_number: str, row: int, dict_month_column: dict,
+                                    sheets_map: dict):
         """
         Обрабатывает платежи одной квартиры и подготавливает их к разноске.
 
@@ -67,7 +70,6 @@ class PaymentDistributor:
             sum_payments = payment.get('sum', None)
             date_payments = payment.get('date', None)
             month_payments = self._getting_month(str(date_payments).split('.')[0])
-            sheets_map = self._map_payment_sheets_structure()
 
     def _map_payment_sheets_structure(self):
         sheets_map = {}
@@ -75,11 +77,12 @@ class PaymentDistributor:
             sheet = self.book[sheet_name]
             max_row = sheet.max_row
             max_column = sheet.max_column
-            for row in range(1,max_row):
-                logger.debug(f'Идет сканирование листа - {sheet_name}')
-                cell_value = cell_values_sheet(sheet, row,1)
+            logger.debug(f'Идет сканирование листа - {sheet_name}')
+            for row in range(1, max_row):
+                cell_value = cell_values_sheet(sheet, row, 1)
         return sheets_map
-    def _search_monthly_columns(self, max_col: int, sheet: Worksheet)-> dict:
+
+    def _search_monthly_columns(self, max_col: int, sheet: Worksheet) -> dict:
         """
             Сканирует первую строку листа и формирует соответствие
             между названием месяца и номером колонки.
@@ -159,17 +162,16 @@ class PaymentDistributor:
               общий процесс обработки ведомости.
         """
 
-
         items = get_sorted_month_starts(buffer)
 
         if not items:
-            logger.error('Недостаточно данных для определения диапазонов колонок') # TODO Доделать для GUI
+            logger.error('Недостаточно данных для определения диапазонов колонок')  # TODO Доделать для GUI
             return buffer
 
         ranges = build_column_ranges(items)
 
         if not ranges:
-            logger.error('Не удалось определить диапазоны колонок месяцев') # TODO Доделать для GUI
+            logger.error('Не удалось определить диапазоны колонок месяцев')  # TODO Доделать для GUI
             return buffer
 
         for month, start_col, end_col in ranges:
@@ -186,7 +188,7 @@ class PaymentDistributor:
 
                 if value is not None:
                     if value in buffer[month]['columns']:
-                        logger.warning(f'Дубликат подколонки "{value}" в месяце "{month}"') # TODO Доделать для GUI
+                        logger.warning(f'Дубликат подколонки "{value}" в месяце "{month}"')  # TODO Доделать для GUI
                     else:
                         buffer[month]['columns'][value.lower()] = col
 
