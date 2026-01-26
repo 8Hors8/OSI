@@ -72,15 +72,56 @@ class PaymentDistributor:
             month_payments = self._getting_month(str(date_payments).split('.')[0])
 
     def _map_payment_sheets_structure(self):
+        """
+        Сканирует все листы банковских платежей один раз и
+        формирует карту месяцев и подколонок.
+
+        Returns:
+            dict:
+                Структура вида:
+                {
+                    "Имя_листа": {
+                        "ЯНВАРЬ": {
+                            "cell": [row, col],
+                            "children": {
+                                "начисление": [row, col],
+                                ...
+                            }
+                        }
+                    }
+                }
+        """
         sheets_map = {}
+        set_months = set(self.months.values())
+
         for bank_account_type, sheet_name in self.schema.CORRESPONDENCE.items():
             sheet = self.book[sheet_name]
             max_row = sheet.max_row
             max_column = sheet.max_column
-            logger.debug(f'Идет сканирование листа - {sheet_name}')
-            for row in range(1, max_row):
-                cell_value = cell_values_sheet(sheet, row, 1)
+
+            if sheet_name not in sheets_map:
+                sheets_map[sheet_name] = {}
+
+            for row in range(1, max_row + 1):
+                row_value = cell_values_sheet(sheet, row, 1)
+
+                if row_value in set_months:
+                    month_name = row_value
+                    sheets_map[sheet_name][month_name] = {
+                        'cell': [row, 1],
+                        'children': {}
+                    }
+
+                    for column in range(1, max_column + 1):
+                        column_value = cell_values_sheet(sheet, row + 1, column)
+
+                        if column_value is not None:
+                            sheets_map[sheet_name][month_name]['children'][column_value] = [row + 1, column]
+        logger.debug(f'Карта листов оплат - {sheets_map}')
         return sheets_map
+
+
+
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet) -> dict:
         """
@@ -98,7 +139,7 @@ class PaymentDistributor:
                 "Январь 2026" -> {"январь": 3}
 
             :rtype: dict
-            :return: 
+            :return:
             :param max_col: Максимальное количество колонок листа.
             :param sheet: Лист Excel, в котором выполняется поиск.
             :return: Словарь вида {название_месяца: номер_колонки}.
