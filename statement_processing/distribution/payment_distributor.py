@@ -19,6 +19,15 @@ class PaymentDistributor:
     """
     Отвечает за разнос банковских платежей в ведомость ОСИ
     согласно бизнес-правилам.
+
+    Класс инкапсулирует логику:
+    - сопоставления банковских платежей с квартирами;
+    - определения месяца и типа платежа;
+    - поиска целевых ячеек в Excel-ведомости;
+    - подготовки данных для последующей записи.
+
+    Запись в Excel выполняется только через вспомогательные функции,
+    сам класс отвечает за анализ и маршрутизацию данных.
     """
 
     def __init__(self, book, payments_from_bank: Optional[dict[str, list[dict[str, str]]]],
@@ -33,6 +42,15 @@ class PaymentDistributor:
         self.months = getattr(self.schema, 'MONTHS', None)
 
     def start_distribution(self):
+        """
+            Точка входа в процесс распределения платежей.
+
+            Метод:
+            - определяет структуру ведомости ОСИ;
+            - находит месячные блоки и подколонки;
+            - формирует карту листов банковских платежей;
+            - запускает обработку платежей для каждой квартиры.
+        """
         allocation_apartments_sheet_name = getattr(self.schema, 'NAME_SHEET', None)
         start_apartments_row = getattr(self.schema, 'START_APARTMENTS_ROW', 1)
         allocation_apartments_sheet = self.book[allocation_apartments_sheet_name]
@@ -52,12 +70,12 @@ class PaymentDistributor:
 
         Метод:
         - извлекает банковские платежи по квартире;
-        - сопоставляет их с колонками месяцев в ведомости;
-        - определяет, какие суммы и в какие ячейки должны быть разнесены;
-        - выполняет логирование расхождений и проблемных ситуаций.
+        - определяет тип платежа и соответствующий лист;
+        - извлекает сумму и дату платежа;
+        - определяет месяц платежа.
 
         Метод не выполняет запись в Excel напрямую,
-        а отвечает за анализ и подготовку данных для разноски.
+        а отвечает за анализ и подготовку данных.
         """
         list_payments = self.bank_payments.get(apartment_number, None)
         if list_payments is None:
@@ -119,9 +137,6 @@ class PaymentDistributor:
                             sheets_map[sheet_name][month_name]['children'][column_value] = [row + 1, column]
         logger.debug(f'Карта листов оплат - {sheets_map}')
         return sheets_map
-
-
-
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet) -> dict:
         """
@@ -229,7 +244,7 @@ class PaymentDistributor:
 
                 if value is not None:
                     if value in buffer[month]['columns']:
-                        logger.warning(f'Дубликат подколонки "{value}" в месяце "{month}"')  # TODO Доделать для GUI
+                        logger.warning(f'Дубликат под колонки "{value}" в месяце "{month}"')  # TODO Доделать для GUI
                     else:
                         buffer[month]['columns'][value.lower()] = col
 
@@ -237,9 +252,22 @@ class PaymentDistributor:
 
     def _getting_month(self, month: int | str) -> Optional[str]:
         """
-        Если передан int (1–12) → возвращает название месяца (str).
-        Если передана строка с названием месяца → возвращает номер месяца (int).
-        Если определить невозможно → None.
+        Преобразует номер месяца в название или наоборот.
+
+        Логика:
+        - если передан int (1–12) → возвращает название месяца;
+        - если передана строка с названием месяца → возвращает номер;
+        - если определить невозможно → None.
+
+        Также сохраняет результат во внутренние атрибуты
+        `self.month_name` или `self.month_number`.
+
+        Args:
+            month (int | str): Номер или название месяца.
+
+        Returns:
+            Optional[str | int]:
+                Название или номер месяца, либо None.
         """
 
         # обратный словарь
