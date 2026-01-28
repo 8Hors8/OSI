@@ -87,7 +87,7 @@ class PaymentDistributor:
             correspondence_sheet = self._search_match_sheet(type_payments)
             sum_payments = payment.get('sum', None)
             date_payments = payment.get('date', None)
-            month_payments = self._getting_month(str(date_payments).split('.')[0])
+            month_payments = self._getting_month(str(date_payments).split('.')[1])
 
     def _map_payment_sheets_structure(self):
         """
