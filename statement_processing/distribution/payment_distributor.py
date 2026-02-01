@@ -109,7 +109,9 @@ class PaymentDistributor:
                     }
                 }
         """
+        anchor_apt_number = getattr(self.schema,'ANCHOR_APT_NUMBER','№ квартиры').lower()
         sheets_map = {}
+        buffer_dictionary = {}
         set_months = set(self.months.values())
 
         for bank_account_type, sheet_name in self.schema.CORRESPONDENCE.items():
@@ -134,9 +136,18 @@ class PaymentDistributor:
                         column_value = cell_values_sheet(sheet, row + 1, column)
 
                         if column_value is not None:
-                            sheets_map[sheet_name][month_name]['children'][column_value] = [row + 1, column]
+                            buffer_dictionary[column_value.lower()] = column
+
+                column_apartment = buffer_dictionary.get(anchor_apt_number,None)
+                if column_apartment is None and len(buffer_dictionary) > 0:
+                    logger.error(f'Ошибка на листе "{sheet_name}" отсутствуют ожидаемые колонки ') # TODO Доделать для GUI
+                    raise
+
         logger.debug(f'Карта листов оплат - {sheets_map}')
         return sheets_map
+
+    def _obtaining_values_payments (self, sheet:Worksheet,row:int,column_apartment:int  ):
+        pass
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet) -> dict:
         """
