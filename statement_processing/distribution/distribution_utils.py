@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional, Any
 from openpyxl.worksheet.worksheet import Worksheet
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def cell_values_sheet(sheet: Worksheet, row: int, column: int, log=False) -> Any:

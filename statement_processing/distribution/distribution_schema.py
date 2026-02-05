@@ -35,4 +35,4 @@ class DistributionSchema(ExpectedSheets):
     """=======================================
     Название столбцов
     """
-    ANCHOR_APT_NUMBER = '№ квартиры1'
+    ANCHOR_APT_NUMBER = '№ квартиры'
