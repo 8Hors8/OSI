@@ -111,7 +111,6 @@ class PaymentDistributor:
         """
         anchor_apt_number = getattr(self.schema,'ANCHOR_APT_NUMBER','№ квартиры').lower()
         sheets_map = {}
-        buffer_dictionary = {}
         set_months = set(self.months.values())
 
         for bank_account_type, sheet_name in self.schema.CORRESPONDENCE.items():
@@ -124,6 +123,7 @@ class PaymentDistributor:
 
             for row in range(1, max_row + 1):
                 row_value = cell_values_sheet(sheet, row, 1)
+                buffer_dictionary = {}
 
                 if row_value in set_months:
                     month_name = row_value
