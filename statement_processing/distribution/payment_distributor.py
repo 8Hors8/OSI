@@ -109,9 +109,11 @@ class PaymentDistributor:
                     }
                 }
         """
-        anchor_apt_number = getattr(self.schema,'ANCHOR_APT_NUMBER','№ квартиры').lower()
+        anchor_apt_number = getattr(self.schema, 'ANCHOR_APT_NUMBER', '№ квартиры').lower()
         sheets_map = {}
+        buffer_dictionary = {}
         set_months = set(self.months.values())
+        month_name = None
 
         for bank_account_type, sheet_name in self.schema.CORRESPONDENCE.items():
             sheet = self.book[sheet_name]
@@ -123,31 +125,41 @@ class PaymentDistributor:
 
             for row in range(1, max_row + 1):
                 row_value = cell_values_sheet(sheet, row, 1)
-                buffer_dictionary = {}
 
                 if row_value in set_months:
                     month_name = row_value
                     sheets_map[sheet_name][month_name] = {
                         'cell': [row, 1],
-                        'children': {}
+                        'apartments': {}
                     }
-
+                    substring = row + 1
                     for column in range(1, max_column + 1):
-                        column_value = cell_values_sheet(sheet, row + 1, column)
+                        column_value = cell_values_sheet(sheet, substring, column)
 
                         if column_value is not None:
                             buffer_dictionary[column_value.lower()] = column
 
-                column_apartment = buffer_dictionary.get(anchor_apt_number,None)
+                column_apartment = buffer_dictionary.get(anchor_apt_number, None)
                 if column_apartment is None and len(buffer_dictionary) > 0:
-                    logger.error(f'Ошибка на листе "{sheet_name}" отсутствуют ожидаемые колонки ') # TODO Доделать для GUI
+                    logger.error(
+                        f'Ошибка на листе "{sheet_name}" отсутствуют ожидаемые колонки ')  # TODO Доделать для GUI
                     raise
-
+                elif month_name is not None:
+                    sheets_map[sheet_name][month_name]['apartments'] = self._obtaining_values_payments(sheet, substring,
+                                                                                                       max_column + 1,
+                                                                                                       buffer_dictionary,
+                                                                                                       column_apartment)
+                else:
+                    continue
         logger.debug(f'Карта листов оплат - {sheets_map}')
         return sheets_map
 
-    def _obtaining_values_payments (self, sheet:Worksheet,row:int,column_apartment:int  ):
-        pass
+    def _obtaining_values_payments(self, sheet: Worksheet, substring: int, max_column: int, buffer: dict,
+                                   column_apartment: int):
+        result = {}
+        for row in range(substring + 1, len(self.apartments_numbers) + 1):
+            row_value = cell_values_sheet(sheet, row, column_apartment)
+        return result
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet) -> dict:
         """
