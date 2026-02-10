@@ -91,31 +91,33 @@ class PaymentDistributor:
 
     def _map_payment_sheets_structure(self):
         """
-        Сканирует все листы банковских платежей один раз и
-        формирует карту месяцев и подколонок.
+    Выполняет глубокое сканирование листов оплат для построения карты координат.
 
-        Returns:
-            dict:
-                Структура вида:
-                {
-                    "Имя_листа": {
-                        "ЯНВАРЬ": {
-                            "cell": [row, col],
-                            "children": {
-                                "начисление": [row, col],
-                                ...
-                            }
-                        }
-                    }
-                }
-        """
+    Метод обходит листы, указанные в схеме соответствия, идентифицирует блоки месяцев
+    и динамически определяет индексы столбцов (например, '№ квартиры', 'дата', 'сумма').
+    Это позволяет абстрагироваться от жестко заданных координат ячеек.
+
+    Returns:
+        dict: Древовидная структура метаданных ведомости.
+            Ключи верхнего уровня — названия листов (str).
+            Вложенные ключи — названия месяцев (str).
+            'cell': координаты заголовка месяца [row, col].
+            'apartments': словарь данных по каждой квартире, полученный
+                         через _obtaining_values_payments.
+
+    Raises:
+        ValueError: Если на листе не найдена критически важная колонка (якорь).
+        Exception: В случае системных ошибок при чтении ячеек (логируется через logger.exception).
+    """
         anchor_apt_number = getattr(self.schema, 'ANCHOR_APT_NUMBER', '№ квартиры').lower()
         sheets_map = {}
-        buffer_dictionary = {}
+
         set_months = set(self.months.values())
-        month_name = None
+
 
         for bank_account_type, sheet_name in self.schema.CORRESPONDENCE.items():
+            buffer_dictionary = {}
+            month_name = None
             sheet = self.book[sheet_name]
             max_row = sheet.max_row
             max_column = sheet.max_column
@@ -145,20 +147,50 @@ class PaymentDistributor:
                         f'Ошибка на листе "{sheet_name}" отсутствуют ожидаемые колонки ')  # TODO Доделать для GUI
                     raise
                 elif month_name is not None:
-                    sheets_map[sheet_name][month_name]['apartments'] = self._obtaining_values_payments(sheet, substring,
-                                                                                                       max_column + 1,
+                    try:
+                        sheets_map[sheet_name][month_name]['apartments'] = self._obtaining_values_payments(sheet,
+                                                                                                       substring,
                                                                                                        buffer_dictionary,
                                                                                                        column_apartment)
+                    except Exception:
+                        logger.exception(f'ошибка {sheet_name} {row},{column} {row_value}')
                 else:
                     continue
         logger.debug(f'Карта листов оплат - {sheets_map}')
         return sheets_map
 
-    def _obtaining_values_payments(self, sheet: Worksheet, substring: int, max_column: int, buffer: dict,
-                                   column_apartment: int):
+    def _obtaining_values_payments(self, sheet: Worksheet, substring: int, buffer: dict,
+                                   column_apartment: int)->dict:
+        """
+            Извлекает и структурирует данные платежей из конкретного блока месяца.
+
+            Проходит вниз от строки заголовоков месяца и собирает значения всех
+            найденных подколонок (дата, период, сумма и т.д.) для каждой квартиры.
+
+            Args:
+                sheet (Worksheet): Объект листа openpyxl для чтения данных.
+                substring (int): Номер строки с заголовками колонок (на один ниже строки месяца).
+                max_column (int): Граница сканирования по горизонтали.
+                buffer (dict): Карта соответствия названий колонок их индексам {название: индекс}.
+                column_apartment (int): Индекс колонки, содержащей номер квартиры (якорь поиска).
+
+            Returns:
+                dict: Словарь распределенных данных.
+                    Ключ: Номер квартиры (str/int).
+                    Значение: Словарь платежных атрибутов {название_колонки: значение_ячейки}.
+
+            Note:
+                Диапазон сканирования строк определяется исходя из ожидаемого
+                количества квартир (self.apartments_numbers).
+            """
         result = {}
-        for row in range(substring + 1, len(self.apartments_numbers) + 1):
-            row_value = cell_values_sheet(sheet, row, column_apartment)
+        for row in range(substring + 1, len(self.apartments_numbers) + substring + 1):
+            row_apartment = cell_values_sheet(sheet, row, column_apartment)
+            result[row_apartment] = {}
+            for key, column in buffer.items():
+                if column != column_apartment:
+                    row_value = cell_values_sheet(sheet, row, column)
+                    result[row_apartment][key] = row_value
         return result
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet) -> dict:
