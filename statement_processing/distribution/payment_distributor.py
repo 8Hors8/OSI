@@ -88,6 +88,7 @@ class PaymentDistributor:
             sum_payments = payment.get('sum', None)
             date_payments = payment.get('date', None)
             month_payments = self._getting_month(str(date_payments).split('.')[1])
+            target_apartment_map = sheets_map[correspondence_sheet][month_payments]['apartments'][int(apartment_number)]
 
     def _map_payment_sheets_structure(self):
         """
