@@ -184,12 +184,12 @@ class PaymentDistributor:
             """
         result = {}
         for row in range(substring + 1, len(self.apartments_numbers) + substring + 1):
-            row_apartment = cell_values_sheet(sheet, row, column_apartment)
-            result[row_apartment] = {}
+            number_apartment = cell_values_sheet(sheet, row, column_apartment)
+            result[number_apartment] = {'row': row}
             for key, column in buffer.items():
                 if column != column_apartment:
                     row_value = cell_values_sheet(sheet, row, column)
-                    result[row_apartment][key] = row_value
+                    result[number_apartment][key] = {'value':row_value,'col':column}
         return result
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet) -> dict:
