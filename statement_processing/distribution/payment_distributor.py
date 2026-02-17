@@ -90,6 +90,32 @@ class PaymentDistributor:
             month_payments = self._getting_month(str(date_payments).split('.')[1])
             target_apartment_map = sheets_map[correspondence_sheet][month_payments]['apartments'][int(apartment_number)]
 
+            filled_cells = self._get_filled_cells(target_apartment_map)
+
+            if len(filled_cells) > 0:
+                pass
+            else:
+                pass
+
+
+    def _get_filled_cells(self, target_apartment_map: dict) -> dict:
+        """
+        Анализирует данные квартиры и возвращает только те поля, где уже стоят значения.
+        """
+        result = {}
+        for key, val in target_apartment_map.items():
+            if isinstance(val, dict):
+                if val['value'] is not None:
+                    result[key] = val
+                else:
+                    pass
+
+        return result
+
+    def _receiving_debt_payment(self):
+        pass
+
+
     def _map_payment_sheets_structure(self):
         """
     Выполняет глубокое сканирование листов оплат для построения карты координат.
@@ -114,7 +140,6 @@ class PaymentDistributor:
         sheets_map = {}
 
         set_months = set(self.months.values())
-
 
         for bank_account_type, sheet_name in self.schema.CORRESPONDENCE.items():
             buffer_dictionary = {}
@@ -150,9 +175,9 @@ class PaymentDistributor:
                 elif month_name is not None:
                     try:
                         sheets_map[sheet_name][month_name]['apartments'] = self._obtaining_values_payments(sheet,
-                                                                                                       substring,
-                                                                                                       buffer_dictionary,
-                                                                                                       column_apartment)
+                                                                                                           substring,
+                                                                                                           buffer_dictionary,
+                                                                                                           column_apartment)
                     except Exception:
                         logger.exception(f'ошибка {sheet_name} {row},{column} {row_value}')
                 else:
@@ -161,7 +186,7 @@ class PaymentDistributor:
         return sheets_map
 
     def _obtaining_values_payments(self, sheet: Worksheet, substring: int, buffer: dict,
-                                   column_apartment: int)->dict:
+                                   column_apartment: int) -> dict:
         """
             Извлекает и структурирует данные платежей из конкретного блока месяца.
 
@@ -190,7 +215,7 @@ class PaymentDistributor:
             for key, column in buffer.items():
                 if column != column_apartment:
                     row_value = cell_values_sheet(sheet, row, column)
-                    result[number_apartment][key] = {'value':row_value,'col':column}
+                    result[number_apartment][key] = {'value': row_value, 'col': column}
         return result
 
     def _search_monthly_columns(self, max_col: int, sheet: Worksheet) -> dict:
