@@ -36,3 +36,8 @@ class DistributionSchema(ExpectedSheets):
     Название столбцов
     """
     ANCHOR_APT_NUMBER = '№ квартиры'
+    PAYMENT_TYPE_MAPPING = {
+        'текущий счет': "Текущие взносы",
+        'накопительный счет': "Накопительные взносы",
+        'целевой счет': "Целевые взносы",
+    }
