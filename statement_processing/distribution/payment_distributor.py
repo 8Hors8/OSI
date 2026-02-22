@@ -40,6 +40,7 @@ class PaymentDistributor:
         self.expected_sheets = ExpectedSheets()
         self.schema = DistributionSchema()
         self.months = getattr(self.schema, 'MONTHS', None)
+        self.debt_indices = None
 
     def start_distribution(self):
         """
@@ -112,7 +113,7 @@ class PaymentDistributor:
 
         return result
 
-    def _receiving_debt_payment(self):
+    def _get_debt_and_payment_columns(self):
         pass
 
 
