@@ -84,7 +84,7 @@ class PaymentDistributor:
             return
         for payment in list_payments:
             logger.debug(f'Платежи квартиры {apartment_number}-{payment}')
-            type_payments = payment.get('type', None)
+            type_payments:str = payment.get('type', None)
             correspondence_sheet = self._search_match_sheet(type_payments)
             sum_payments = payment.get('sum', None)
             date_payments = payment.get('date', None)
@@ -96,6 +96,7 @@ class PaymentDistributor:
             if len(filled_cells) > 0:
                 pass
             else:
+                self.debt_indices = self._get_debt_and_payment_columns(type_payments)
                 pass
 
 
@@ -113,8 +114,13 @@ class PaymentDistributor:
 
         return result
 
-    def _get_debt_and_payment_columns(self):
-        pass
+    def _get_debt_and_payment_columns(self ) -> dict:
+        if self.debt_indices is None:
+            result= {}
+
+            return result
+        else:
+            return self.debt_indices
 
 
     def _map_payment_sheets_structure(self):
