@@ -35,6 +35,10 @@ class ExpectedSheets:
     CUMULATIVE_PAYMENT = 'оплата накоп'
     PAYMENT_PURPOSE = 'оплата целев'
 
+    CURRENT_ACCOUNT = "текущий счет"
+    SAVINGS_ACCOUNT = "накопительный счет"
+    TARGET_ACCOUNT = "целевой счет"
+
     ALL_SHEETS = {
         DELIVERY_APARTMENTS,
         CURRENT_PAYMENT,
@@ -43,9 +47,9 @@ class ExpectedSheets:
     }
 
     CORRESPONDENCE = {
-        'текущий счет': CURRENT_PAYMENT,
-        'накопительный счет': CUMULATIVE_PAYMENT,
-        'целевой счет': PAYMENT_PURPOSE,
+        CURRENT_ACCOUNT: CURRENT_PAYMENT,
+        SAVINGS_ACCOUNT : CUMULATIVE_PAYMENT,
+        TARGET_ACCOUNT: PAYMENT_PURPOSE,
     }
 
 

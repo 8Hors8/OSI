@@ -35,9 +35,13 @@ class DistributionSchema(ExpectedSheets):
     """=======================================
     Название столбцов
     """
+    LABEL_CURRENT = "Текущие взносы"
+    LABEL_CUMULATIVE = "Накопительные взносы"
+    LABEL_PURPOSE = "Целевые взносы"
+
     ANCHOR_APT_NUMBER = '№ квартиры'
     PAYMENT_TYPE_MAPPING = {
-        'текущий счет': "Текущие взносы",
-        'накопительный счет': "Накопительные взносы",
-        'целевой счет': "Целевые взносы",
+        ExpectedSheets.CURRENT_ACCOUNT: LABEL_CURRENT,
+        ExpectedSheets.SAVINGS_ACCOUNT: LABEL_CUMULATIVE,
+        ExpectedSheets.TARGET_ACCOUNT: LABEL_PURPOSE,
     }
