@@ -6,7 +6,7 @@ distribution_schema.py
 import logging
 
 from statement_processing.statement_schema import ExpectedSheets
-
+from typing import Optional
 logger = logging.getLogger(__name__)
 
 
@@ -40,7 +40,14 @@ class DistributionSchema(ExpectedSheets):
     LABEL_PURPOSE = "Целевые взносы"
 
     ANCHOR_APT_NUMBER = '№ квартиры'
-    PAYMENT_TYPE_MAPPING = {
+
+    """
+    Маппинг для связи:
+    - текущий счет -> Текущие взносы
+    - накопительный счет -> Накопительные взносы
+    - целевой счет-> Целевые взносы
+    """
+    PAYMENT_TYPE_MAPPING : dict[str, str] = {
         ExpectedSheets.CURRENT_ACCOUNT: LABEL_CURRENT,
         ExpectedSheets.SAVINGS_ACCOUNT: LABEL_CUMULATIVE,
         ExpectedSheets.TARGET_ACCOUNT: LABEL_PURPOSE,
