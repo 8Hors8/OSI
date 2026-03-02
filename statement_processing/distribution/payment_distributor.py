@@ -31,7 +31,7 @@ class PaymentDistributor:
     """
 
     def __init__(self, book, payments_from_bank: Optional[dict[str, list[dict[str, str]]]],
-                 apartments_numbers: dict[str, tuple[int, int]]):
+                 apartments_numbers: dict[int, tuple[int, int]]):
         self.book = book
         self.apartments_numbers = apartments_numbers
         self.bank_payments = payments_from_bank
