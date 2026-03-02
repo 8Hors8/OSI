@@ -37,6 +37,7 @@ class PaymentDistributor:
         self.bank_payments = payments_from_bank
         self.month_name = None
         self.month_number = None
+        self.dict_month_column = None
         self.expected_sheets = ExpectedSheets()
         self.schema = DistributionSchema()
         self.months = getattr(self.schema, 'MONTHS', None)
@@ -57,11 +58,11 @@ class PaymentDistributor:
         allocation_apartments_sheet = self.book[allocation_apartments_sheet_name]
         max_row = allocation_apartments_sheet.max_row
         max_col = allocation_apartments_sheet.max_column
-        dict_month_column = self._search_monthly_columns(max_col, allocation_apartments_sheet)
-        logger.debug(f'Значение месяц стартовый столбец столбец и под столбцы {dict_month_column}')
+        self.dict_month_column = self._search_monthly_columns(max_col, allocation_apartments_sheet)
+        logger.debug(f'Значение месяц стартовый столбец столбец и под столбцы {self.dict_month_column}')
         sheets_map = self._map_payment_sheets_structure()
         for key, cell in self.apartments_numbers.items():
-            self._process_apartment_payments(allocation_apartments_sheet, str(key), cell[0], dict_month_column,
+            self._process_apartment_payments(allocation_apartments_sheet, str(key), cell[0], self.dict_month_column,
                                              sheets_map)
 
     def _process_apartment_payments(self, sheet: Worksheet, apartment_number: str, row: int, dict_month_column: dict,
@@ -96,7 +97,7 @@ class PaymentDistributor:
             if len(filled_cells) > 0:
                 pass
             else:
-                self.debt_indices = self._get_debt_and_payment_columns(type_payments)
+                self.debt_indices = self._get_debt_and_payment_columns()
                 pass
 
 
@@ -117,7 +118,8 @@ class PaymentDistributor:
     def _get_debt_and_payment_columns(self ) -> dict:
         if self.debt_indices is None:
             result= {}
-
+            colum_start = self.apartments_numbers[1][1]
+            colum_end = self.dict_month_column['январь']['start_col']
             return result
         else:
             return self.debt_indices
