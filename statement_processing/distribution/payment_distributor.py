@@ -79,6 +79,7 @@ class PaymentDistributor:
         Метод не выполняет запись в Excel напрямую,
         а отвечает за анализ и подготовку данных.
         """
+        self.debt_indices = self._get_debt_and_payment_columns()
         list_payments = self.bank_payments.get(apartment_number, None)
         if list_payments is None:
             logger.debug(f'квартира с №{apartment_number} нет оплаты ')
@@ -95,9 +96,10 @@ class PaymentDistributor:
             filled_cells = self._get_filled_cells(target_apartment_map)
 
             if len(filled_cells) > 0:
+                # здесь надо добавить обработку если платеж уже вписан в ячейку
                 pass
             else:
-                self.debt_indices = self._get_debt_and_payment_columns()
+
                 pass
 
 
@@ -115,7 +117,7 @@ class PaymentDistributor:
 
         return result
 
-    def _get_debt_and_payment_columns(self ) -> dict:
+    def _get_debt_and_payment_columns(self ) -> dict: # надо доделать функцию сканированя блока долгов на листе разноска
         if self.debt_indices is None:
             result= {}
             colum_start = self.apartments_numbers[1][1]
@@ -125,7 +127,7 @@ class PaymentDistributor:
             return self.debt_indices
 
 
-    def _map_payment_sheets_structure(self):
+    def _map_payment_sheets_structure(self): #TODO: Добавить проверку на наличие номеров квартир
         """
     Выполняет глубокое сканирование листов оплат для построения карты координат.
 
