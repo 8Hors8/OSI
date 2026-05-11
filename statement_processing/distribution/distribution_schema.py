@@ -32,6 +32,9 @@ class DistributionSchema(ExpectedSheets):
         12: "декабрь",
     }
 
+    # Название все видов счетов
+    ALL_ACCOUNTS = ExpectedSheets.ALL_ACCOUNTS
+
     """=======================================
     Название столбцов
     """

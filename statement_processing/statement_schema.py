@@ -39,6 +39,12 @@ class ExpectedSheets:
     SAVINGS_ACCOUNT = "накопительный счет"
     TARGET_ACCOUNT = "целевой счет"
 
+    ALL_ACCOUNTS = {
+        CURRENT_ACCOUNT,
+        SAVINGS_ACCOUNT,
+        TARGET_ACCOUNT
+    }
+
     ALL_SHEETS = {
         DELIVERY_APARTMENTS,
         CURRENT_PAYMENT,
