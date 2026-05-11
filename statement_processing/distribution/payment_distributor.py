@@ -117,14 +117,110 @@ class PaymentDistributor:
 
         return result
 
-    def _get_debt_and_payment_columns(self ) -> dict: # надо доделать функцию сканированя блока долгов на листе разноска
-        if self.debt_indices is None:
-            result= {}
-            colum_start = self.apartments_numbers[1][1]
-            colum_end = self.dict_month_column['январь']['start_col']
-            return result
-        else:
+    def _get_debt_and_payment_columns(self) -> dict:
+        """
+        Сканирует фиолетовую шапку листа 'Разноска' для автоматического определения индексов колонок.
+
+        Метод выполняет поиск колонок 'Долг' и 'Оплата' для каждого типа счета,
+        определенного в `self.schema.ALL_ACCOUNTS`. Использует регулярные выражения
+        для очистки заголовков от дат, спецсимволов и лишних пробелов, что делает
+        поиск устойчивым к изменениям в Excel (например, смене года в заголовке).
+
+        Логика обработки заголовка:
+        1. Извлекается сырое значение ячейки (row, col).
+        2. Удаляются все символы, кроме букв (удаляются цифры года, точки, тире).
+        3. Строка приводится к нижнему регистру и очищается от двойных пробелов.
+        4. Выполняется поиск ключевого слова (типа счета) и маркеров 'оплата'/'долг'.
+
+        Returns:
+            dict: Карта индексов колонок. Формат:
+                {
+                    'текущий счет': {'debt_colum': 4, 'payment_colum': 5},
+                    'накопительный счет': {'debt_colum': 7, 'payment_colum': 8},
+                    ...
+                }
+                Если данные не найдены или произошла ошибка, возвращает пустой словарь.
+
+        Raises:
+            AttributeError: Если в self.schema отсутствуют необходимые атрибуты.
+        """
+        # 1. Проверка кэша: если индексы уже найдены, не сканируем Excel повторно
+        if self.debt_indices is not None:
             return self.debt_indices
+
+        try:
+            # 2. Инициализация ресурсов и координат
+            sheet_name = getattr(self.schema, 'NAME_SHEET', None)
+            if not sheet_name:
+                logger.error("Критическая ошибка: В схеме не указано 'NAME_SHEET'.")
+                return {}
+
+            sheet = self.book[sheet_name]
+            result = {}
+
+            # colum_start: колонка сразу после данных о квартирах
+            # colum_end: начало данных за январь (конец блока долгов)
+            colum_start = self.apartments_numbers[1][1] + 1
+            row = self.apartments_numbers[1][0] - 4  # Целевая строка с заголовками
+
+            january_data = self.dict_month_column.get('январь')
+            if not january_data:
+                logger.error("Ошибка навигации: Месяц 'январь' не найден в dict_month_column.")
+                return {}
+
+            colum_end = january_data['start_col']
+            accounts = getattr(self.schema, 'ALL_ACCOUNTS', [])
+
+            logger.info(f"--- Запуск сканирования фиолетовой шапки на листе '{sheet_name}' ---")
+            logger.debug(f"Диапазон поиска: строка {row}, колонки с {colum_start} по {colum_end}")
+
+            # 3. Основной цикл перебора колонок
+            for colum in range(colum_start, colum_end):
+                try:
+                    raw_val = cell_values_sheet(sheet, row, colum)
+                    if not raw_val:
+                        continue
+
+                    # Очистка: оставляем только буквы и одиночные пробелы
+                    # Удаляем даты (01.01.2026), спецсимволы и т.д.
+                    clean_string = re.sub(r'[^а-яА-Яa-zA-Z\s]+', ' ', str(raw_val)).lower().strip()
+                    clean_string = " ".join(clean_string.split())
+
+                    logger.debug(f"Колонка {colum}: '{raw_val}' -> очищено как '{clean_string}'")
+
+                    # Ищем соответствие типа счета в очищенной строке
+                    for account_name in accounts:
+                        if account_name.lower() in clean_string:
+                            # Инициализируем структуру для нового типа счета
+                            if account_name not in result:
+                                result[account_name] = {'debt_colum': None, 'payment_colum': None}
+
+                            # Определяем назначение колонки (Приоритет у Оплаты)
+                            if "оплата" in clean_string:
+                                result[account_name]['payment_colum'] = colum
+                                logger.info(f"  [ OK ] Найдена ОПЛАТА для '{account_name}' (колонка {colum})")
+                            elif "долг" in clean_string:
+                                result[account_name]['debt_colum'] = colum
+                                logger.info(f"  [ OK ] Найден ДОЛГ для '{account_name}' (колонка {colum})")
+
+                            break  # Переходим к следующей колонке
+
+                except Exception as cell_err:
+                    logger.warning(f"Пропущена колонка {colum} из-за ошибки: {cell_err}")
+
+            # 4. Финализация результатов
+            if not result:
+                logger.warning("Результаты поиска пусты. Проверьте структуру заголовков в Excel.")
+            else:
+                logger.info(f"Сканирование завершено. Найдено типов счетов: {len(result)}")
+                logger.debug(f"Полная карта индексов: {result}")
+
+            self.debt_indices = result
+            return result
+
+        except Exception as e:
+            logger.critical(f"Критический сбой метода _get_debt_and_payment_columns: {e}", exc_info=True)
+            return {}
 
 
     def _map_payment_sheets_structure(self): #TODO: Добавить проверку на наличие номеров квартир
